@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>密码学小工具</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235D6D5D'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E">
 <style>
   :root {
     --primary: #5D6D5D;
@@ -97,6 +98,7 @@
     letter-spacing: 0.08em;
     margin-bottom: 12px;
   }
+  .field-name-input { width: 220px; margin-bottom: 10px; }
 
   /* ── Buttons ── */
   .btn {
@@ -581,6 +583,101 @@
   .strength-label { font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; }
   .strength-label .bits { color: var(--text-tertiary); font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", monospace; font-size: 11px; }
 
+  /* ── 密码库 ── */
+  .toolbar input[type="search"] {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .toolbar input[type="search"]:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+  }
+  .pw-list { display: flex; flex-direction: column; gap: 10px; }
+  .pw-entry {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+  }
+  .pw-favicon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    user-select: none;
+  }
+  .pw-favicon img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+  .pw-main { flex: 1; min-width: 0; }
+  .pw-domain { font-size: 14.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pw-account { font-size: 12.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pw-pass { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", monospace; font-size: 13px; color: var(--text-secondary); }
+  .pw-pass .pw-mask { letter-spacing: 0.15em; min-width: 8ch; }
+  .pw-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .pw-actions .btn-mini { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-secondary); }
+  .pw-actions .btn-mini:hover { border-color: var(--primary); color: var(--primary); background: #F5F8F5; }
+  .pw-actions .btn-danger:hover { border-color: var(--error); color: var(--error); background: var(--error-bg); }
+
+  /* ── 要素 ── */
+  .entry-field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .entry-field-row .ef-name {
+    width: 110px;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .entry-field-row .ef-value {
+    flex: 1;
+    min-width: 0;
+  }
+  .entry-field-row .ef-del {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    flex-shrink: 0;
+    align-self: stretch;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: border-color var(--transition), color var(--transition), background var(--transition);
+  }
+  .entry-field-row .ef-del:hover { border-color: var(--error); color: var(--error); background: var(--error-bg); }
+
   /* ── Footer ── */
   .page-footer { text-align: center; margin-top: 30px; font-size: 12px; color: var(--text-tertiary); line-height: 1.8; }
 
@@ -613,6 +710,7 @@
     <button class="tab active" data-tab="keys" role="tab">管理密钥</button>
     <button class="tab" data-tab="notepad" role="tab">记事本</button>
     <button class="tab" data-tab="password" role="tab">密码生成</button>
+    <button class="tab" data-tab="pwlib" role="tab">密码库</button>
   </div>
 
   <!-- ═══════ 管理密钥 ═══════ -->
@@ -824,6 +922,27 @@
     </div>
   </section>
 
+  <!-- ═══════ 密码库 ═══════ -->
+  <section id="tab-pwlib" class="tab-panel">
+    <div class="toolbar">
+      <input type="search" id="pwSearch" placeholder="搜索域名或账号…" aria-label="搜索密码库">
+      <button class="btn btn-ghost" id="btnImportEntries">导入</button>
+      <button class="btn btn-ghost" id="btnExportEntries">导出</button>
+      <button class="btn" id="btnAddEntry">新增</button>
+    </div>
+
+    <div id="pwEmpty" class="empty-state hidden">
+      <div class="empty-title">密码库为空</div>
+      <div class="empty-actions">
+        <button class="btn" id="btnAddFirst">新增密码</button>
+      </div>
+    </div>
+
+    <div id="pwList" class="pw-list hidden"></div>
+
+    <p class="storage-note">密码仅保存在本机浏览器（localStorage）中，不经过任何网络。</p>
+  </section>
+
   <footer class="page-footer">
     密码学小工具 © Purrogram
   </footer>
@@ -979,6 +1098,64 @@
   </div>
 </div>
 
+<!-- ═══════ 密码库条目 ═══════ -->
+<div class="modal-overlay" id="modalEntry">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="entryTitle">新增密码</h2>
+      <button class="modal-close" data-close="modalEntry" aria-label="关闭">&times;</button>
+    </div>
+
+    <div class="form-error" id="entryErr"></div>
+
+    <div class="field">
+      <label class="field-label" for="entryDomain">账号网址</label>
+      <input type="text" id="entryDomain" placeholder="输入账号网址" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="entryAccount">名称</label>
+      <input type="text" id="entryAccount" placeholder="输入项目名称" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <div class="field-head">
+        <label class="field-label" for="entryPassword">密码</label>
+        <label class="check-inline"><input type="checkbox" id="entryShowPass">显示</label>
+      </div>
+      <input type="password" id="entryPassword" placeholder="留空则使用随机密码" autocomplete="new-password">
+    </div>
+
+    <div class="field">
+      <input type="text" class="field-name-input hidden" id="fieldNameInput" placeholder="输入要素名称，回车添加" autocomplete="off" aria-label="要素名称">
+      <div id="entryFields"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-mini btn-ghost" id="btnAddField" type="button">添加要素</button>
+      <button class="btn btn-ghost" data-close="modalEntry">取消</button>
+      <button class="btn" id="btnSaveEntry">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 导入密码库 ═══════ -->
+<div class="modal-overlay" id="modalImportEntries">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>导入密码库</h2>
+      <button class="modal-close" data-close="modalImportEntries" aria-label="关闭">&times;</button>
+    </div>
+    <textarea id="importEntriesText" placeholder="粘贴密码库备份 JSON（从「导出」获得）" style="min-height:120px"></textarea>
+    <div id="importEntriesErr" class="form-error" style="margin-top:10px"></div>
+    <div class="modal-note">同域名同账号的记录将被更新（取更新时间较新的），其余新增。</div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="modalImportEntries">取消</button>
+      <button class="btn" id="btnDoImport">导入</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -1037,22 +1214,22 @@ const STORE_KEY = 'openpgp_keys_v1';
 
 // localStorage 可能在 file:// 等受限环境下不可用，回退到内存存储。
 let storageOk = true;
-let memStore = null;
+let memStore = {};
 try {
   const t = '__opg_test__';
   localStorage.setItem(t, '1');
   localStorage.removeItem(t);
 } catch {
   storageOk = false;
-  memStore = null;
+  memStore = {};
 }
-function readStore(){
-  if (storageOk) return localStorage.getItem(STORE_KEY);
-  return memStore;
+function readStore(key){
+  if (storageOk) return localStorage.getItem(key);
+  return memStore[key] || null;
 }
-function writeStore(val){
-  if (storageOk) localStorage.setItem(STORE_KEY, val);
-  else memStore = val;
+function writeStore(key, val){
+  if (storageOk) localStorage.setItem(key, val);
+  else memStore[key] = val;
 }
 
 /* ══════════ 基础工具 ══════════ */
@@ -1098,12 +1275,12 @@ const sessionKeys = new Map(); // fingerprint -> decrypted PrivateKey
 
 function loadKeys(){
   try {
-    const raw = readStore();
+    const raw = readStore(STORE_KEY);
     keys = raw ? (JSON.parse(raw).keys || []) : [];
   } catch { keys = []; }
 }
 function saveKeys(){
-  writeStore(JSON.stringify({ version: 1, keys }));
+  writeStore(STORE_KEY, JSON.stringify({ version: 1, keys }));
 }
 function getRec(fp){ return keys.find(k => k.fingerprint === fp); }
 
@@ -2102,6 +2279,483 @@ function wirePasswordEvents() {
   pwSyncMinState();
 }
 
+/* ══════════ 密码库 ══════════ */
+
+const PW_STORE_KEY = 'openpgp_pwlib_v1';
+const PW_ICON_KEY = 'pwlib_icon_cache_v1';
+
+let pwEntries = [];
+let pwIconCache = {};   // apex 域 -> 成功图标路径 | 'placeholder'
+let pwFilter = '';
+let pwVisible = {};     // entryId -> bool
+let pwHideTimers = {};
+let pwEditingId = null;
+
+const PW_ICON_PATHS = ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'];
+const PW_COLORS = ['#5D6D5D', '#8B7D5D', '#5D7D8B', '#7D5D8B', '#8B5D5D', '#5D8B7D', '#8B6D5D'];
+
+function pwLoadEntries(){
+  try {
+    const raw = readStore(PW_STORE_KEY);
+    pwEntries = raw ? (JSON.parse(raw).entries || []) : [];
+  } catch { pwEntries = []; }
+  pwEntries = pwEntries.filter(e => e && typeof e.id === 'string' && typeof e.domain === 'string' && typeof e.account === 'string' && typeof e.password === 'string');
+}
+function pwSaveEntries(){ writeStore(PW_STORE_KEY, JSON.stringify({ version: 1, entries: pwEntries })); }
+function pwLoadIconCache(){
+  try {
+    const raw = readStore(PW_ICON_KEY);
+    pwIconCache = raw ? (JSON.parse(raw) || {}) : {};
+  } catch { pwIconCache = {}; }
+}
+function pwSaveIconCache(){ writeStore(PW_ICON_KEY, JSON.stringify(pwIconCache)); }
+
+function normalizeDomain(input){
+  let s = String(input || '').trim().toLowerCase();
+  if (!s) return null;
+  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+  let hostname;
+  try { hostname = new URL(s).hostname; } catch { return null; }
+  if (!hostname || hostname.indexOf('.') === -1) return null;
+  if (!/^[a-z0-9.-]+$/.test(hostname)) return null;
+  return hostname;
+}
+function apexDomain(host){ return String(host).replace(/^www\./, ''); }
+function pwInitial(host){
+  const a = apexDomain(host);
+  return (a[0] || '?').toUpperCase();
+}
+function pwColorFor(host){
+  let h = 0;
+  for (const c of String(host)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return PW_COLORS[h % PW_COLORS.length];
+}
+
+// favicon 渐进增强：先渲染首字母占位，再异步探测图标，成功才替换（隐藏首字母）。
+function pwAttachFavicon(host, iconEl, initialEl){
+  const apex = apexDomain(host);
+  initialEl.textContent = pwInitial(host);
+  initialEl.style.background = pwColorFor(host);
+  const cached = pwIconCache[apex];
+  if (!cached || cached === 'placeholder') {
+    if (!cached) pwProbeFavicon(apex, iconEl, initialEl);
+    return;
+  }
+  iconEl.src = 'https://' + apex + '/' + cached;
+  iconEl.alt = '';
+  initialEl.style.display = 'none';
+}
+function pwProbeFavicon(apex, iconEl, initialEl){
+  const tryPath = idx => {
+    if (idx >= PW_ICON_PATHS.length) {
+      pwIconCache[apex] = 'placeholder';
+      pwSaveIconCache();
+      return;
+    }
+    const path = PW_ICON_PATHS[idx];
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => {
+      if (img.naturalWidth > 0) {
+        pwIconCache[apex] = path;
+        pwSaveIconCache();
+        iconEl.src = 'https://' + apex + '/' + path;
+        iconEl.alt = '';
+        if (initialEl) initialEl.style.display = 'none';
+      } else tryPath(idx + 1);
+    };
+    img.onerror = () => tryPath(idx + 1);
+    img.src = 'https://' + apex + '/' + path;
+  };
+  tryPath(0);
+}
+
+function genRandomPassword(len){
+  len = Math.max(8, Math.min(64, len || 16));
+  const pools = [
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    'abcdefghijklmnopqrstuvwxyz',
+    '0123456789',
+    '!@#$%^*'
+  ];
+  let out = [];
+  for (const p of pools) out.push(p[Math.floor(Math.random() * p.length)]);
+  const all = pools.join('');
+  while (out.length < len) out.push(all[Math.floor(Math.random() * all.length)]);
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out.join('');
+}
+
+function pwOpenEntry(id){
+  pwEditingId = id || null;
+  const rec = id ? pwEntries.find(e => e.id === id) : null;
+  $('entryTitle').textContent = rec ? '编辑密码' : '新增密码';
+  $('entryDomain').value = rec ? rec.domain : '';
+  $('entryAccount').value = rec ? rec.account : '';
+  $('entryPassword').value = '';
+  $('entryShowPass').checked = false;
+  $('entryPassword').type = 'password';
+  $('entryErr').classList.remove('visible');
+  $('entryFields').innerHTML = '';
+  openModal('modalEntry');
+  setTimeout(() => $('entryDomain').focus(), 30);
+}
+function pwCloseEntry(){ closeModal('modalEntry'); }
+
+// 动态要素行：名称（静态文本）+ 值输入框 + 删除按钮
+function pwAddFieldRow(name, value){
+  const wrap = $('entryFields');
+  const row = document.createElement('div');
+  row.className = 'entry-field-row';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'ef-name';
+  nameSpan.textContent = name || '';
+
+  const valueInput = document.createElement('input');
+  valueInput.type = 'text';
+  valueInput.className = 'ef-value';
+  valueInput.placeholder = '输入' + (name && name.trim() ? name.trim() : '自定义名称');
+  valueInput.value = value || '';
+  valueInput.setAttribute('aria-label', '要素值');
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'ef-del';
+  delBtn.textContent = '×';
+  delBtn.title = '删除该要素';
+  delBtn.setAttribute('aria-label', '删除要素');
+  delBtn.addEventListener('click', () => row.remove());
+
+  row.appendChild(nameSpan);
+  row.appendChild(valueInput);
+  row.appendChild(delBtn);
+  wrap.appendChild(row);
+  valueInput.focus();
+}
+
+// 要素名称输入框（隐藏，点击「要素」标题或「添加要素」时唤起）：回车新建行，Esc/失焦恢复
+function pwFieldNameStart(){
+  const input = $('fieldNameInput');
+  if (!input.classList.contains('hidden')) return;
+  input.classList.remove('hidden');
+  input.value = '';
+  input.focus();
+}
+function pwFieldNameStop(){
+  const input = $('fieldNameInput');
+  if (input.classList.contains('hidden')) return;
+  input.classList.add('hidden');
+  input.value = '';
+}
+function pwFieldNameCommit(){
+  const name = $('fieldNameInput').value.trim();
+  if (name) pwAddFieldRow(name);
+  pwFieldNameStop();
+  pwFieldNameStart(); // 连续添加：行新建后再次唤起输入框
+}
+
+function pwSaveEntry(){
+  const errEl = $('entryErr');
+  const domain = normalizeDomain($('entryDomain').value);
+  const account = $('entryAccount').value.trim();
+  const password = $('entryPassword').value;
+  if (!domain) { errEl.textContent = '请输入有效的账号网址（如 github.com）。'; errEl.classList.add('visible'); return; }
+  if (!account) { errEl.textContent = '请输入名称。'; errEl.classList.add('visible'); return; }
+  if (!pwEditingId && !password) { errEl.textContent = '请输入密码。'; errEl.classList.add('visible'); return; }
+
+  // 收集要素：名称与值都填了才保存；名称重复的报错
+  const fields = [];
+  const seenNames = new Set();
+  let hasBad = false;
+  document.querySelectorAll('#entryFields .entry-field-row').forEach(row => {
+    const name = row.querySelector('.ef-name').textContent.trim();
+    const value = row.querySelector('.ef-value').value.trim();
+    if (!name && !value) return; // 整行空 → 忽略
+    if (!name) { hasBad = true; errEl.textContent = '要素缺少名称，请补全或删除该行。'; errEl.classList.add('visible'); return; }
+    if (seenNames.has(name)) { hasBad = true; errEl.textContent = '要素名称「' + name + '」重复。'; errEl.classList.add('visible'); return; }
+    seenNames.add(name);
+    fields.push({ name: name, value: value });
+  });
+  if (hasBad) return;
+
+  if (pwEditingId) {
+    const rec = pwEntries.find(e => e.id === pwEditingId);
+    if (!rec) return;
+    const dup = pwEntries.find(e => e.id !== pwEditingId && e.domain === domain && e.account === account);
+    rec.domain = domain;
+    rec.account = account;
+    if (password) rec.password = password;
+    rec.fields = fields;
+    rec.updatedAt = new Date().toISOString();
+    if (dup) toast('已更新：同网址同名称已存在另一条记录');
+  } else {
+    const dup = pwEntries.find(e => e.domain === domain && e.account === account);
+    pwEntries.push({
+      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.floor(Math.random() * 10000),
+      domain: domain,
+      account: account,
+      password: password || genRandomPassword(16),
+      fields: fields,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    if (dup) toast('提示：同网址同名称已存在另一条记录');
+  }
+  pwSaveEntries();
+  pwCloseEntry();
+  renderPwList();
+}
+
+function pwDeleteEntry(id){
+  const rec = pwEntries.find(e => e.id === id);
+  if (!rec) return;
+  confirmDialog('确定要删除「' + rec.domain + ' / ' + rec.account + '」这条密码记录吗？此操作不可恢复。').then(ok => {
+    if (!ok) return;
+    pwEntries = pwEntries.filter(e => e.id !== id);
+    pwSaveEntries();
+    renderPwList();
+    toast('已删除');
+  });
+}
+
+function pwToggleVisible(id, btn){
+  const rec = pwEntries.find(e => e.id === id);
+  if (!rec) return;
+  const show = !pwVisible[id];
+  pwVisible[id] = show;
+  const row = btn.closest('.pw-entry');
+  const maskEl = row.querySelector('.pw-mask');
+  maskEl.textContent = show ? rec.password : '••••••••';
+  btn.textContent = show ? '隐藏' : '显示';
+  btn.title = show ? '隐藏密码' : '显示密码';
+  if (show) {
+    clearTimeout(pwHideTimers[id]);
+    pwHideTimers[id] = setTimeout(() => pwHidePassword(id), 12000);
+  } else {
+    clearTimeout(pwHideTimers[id]);
+  }
+}
+function pwHidePassword(id){
+  if (!pwVisible[id]) return;
+  pwVisible[id] = false;
+  const row = document.querySelector('.pw-entry[data-id="' + id + '"]');
+  if (row) {
+    const maskEl = row.querySelector('.pw-mask');
+    const rec = pwEntries.find(e => e.id === id);
+    if (rec) maskEl.textContent = '••••••••';
+    const btn = row.querySelector('[data-act=show]');
+    if (btn) { btn.textContent = '显示'; btn.title = '显示密码'; }
+  }
+}
+function pwHideAllPasswords(){
+  Object.keys(pwVisible).forEach(id => pwHidePassword(id));
+}
+
+function pwCopyPassword(id){
+  const rec = pwEntries.find(e => e.id === id);
+  if (rec) copyText(rec.password);
+}
+
+function renderPwList(){
+  const list = $('pwList');
+  const empty = $('pwEmpty');
+  const q = pwFilter.trim().toLowerCase();
+  let items = pwEntries.slice().sort((a, b) => a.domain.localeCompare(b.domain) || a.account.localeCompare(b.account));
+  if (q) {
+    items = items.filter(e => {
+      if (e.domain.toLowerCase().includes(q) || e.account.toLowerCase().includes(q)) return true;
+      return (Array.isArray(e.fields) && e.fields.some(f => String(f.name).toLowerCase().includes(q) || String(f.value).toLowerCase().includes(q)));
+    });
+  }
+
+  if (!pwEntries.length) {
+    empty.classList.remove('hidden');
+    empty.querySelector('.empty-title').textContent = '密码库为空';
+    empty.querySelector('.empty-actions').innerHTML = '';
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.id = 'btnAddFirst';
+    btn.textContent = '新增密码';
+    btn.addEventListener('click', () => pwOpenEntry(null));
+    empty.querySelector('.empty-actions').appendChild(btn);
+    list.classList.add('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  list.classList.remove('hidden');
+  list.innerHTML = '';
+
+  if (!items.length) {
+    const emptyRow = document.createElement('div');
+    emptyRow.className = 'empty-state';
+    const t = document.createElement('div');
+    t.className = 'empty-title';
+    t.textContent = '没有匹配「' + pwFilter + '」的记录';
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'btn btn-ghost';
+    clearBtn.textContent = '清除搜索';
+    clearBtn.addEventListener('click', () => { pwFilter = ''; $('pwSearch').value = ''; renderPwList(); });
+    emptyRow.appendChild(t);
+    const acts = document.createElement('div');
+    acts.className = 'empty-actions';
+    acts.appendChild(clearBtn);
+    emptyRow.appendChild(acts);
+    list.appendChild(emptyRow);
+    return;
+  }
+
+  for (const rec of items) {
+    const row = document.createElement('div');
+    row.className = 'pw-entry';
+    row.dataset.id = rec.id;
+
+    const icon = document.createElement('div');
+    icon.className = 'pw-favicon';
+    const initial = document.createElement('span');
+    icon.appendChild(initial);
+    const img = document.createElement('img');
+    img.alt = '';
+    img.loading = 'lazy';
+    icon.appendChild(img);
+    pwAttachFavicon(rec.domain, img, initial);
+
+    const main = document.createElement('div');
+    main.className = 'pw-main';
+    const dom = document.createElement('div');
+    dom.className = 'pw-domain';
+    dom.textContent = rec.domain;
+    const acc = document.createElement('div');
+    acc.className = 'pw-account';
+    acc.textContent = rec.account;
+    main.appendChild(dom);
+    main.appendChild(acc);
+
+    const pass = document.createElement('div');
+    pass.className = 'pw-pass';
+    const mask = document.createElement('span');
+    mask.className = 'pw-mask';
+    mask.textContent = pwVisible[rec.id] ? rec.password : '••••••••';
+    pass.appendChild(mask);
+
+    const actions = document.createElement('div');
+    actions.className = 'pw-actions';
+    const mkBtn = (label, title, act) => {
+      const b = document.createElement('button');
+      b.className = 'btn btn-mini';
+      b.textContent = label;
+      b.title = title;
+      b.dataset.act = act;
+      b.addEventListener('click', () => {
+        if (act === 'show') pwToggleVisible(rec.id, b);
+        else if (act === 'copy') pwCopyPassword(rec.id);
+        else if (act === 'edit') pwOpenEntry(rec.id);
+        else if (act === 'del') pwDeleteEntry(rec.id);
+      });
+      return b;
+    };
+    const showBtn = mkBtn(pwVisible[rec.id] ? '隐藏' : '显示', pwVisible[rec.id] ? '隐藏密码' : '显示密码', 'show');
+    const copyBtn = mkBtn('复制', '复制密码', 'copy');
+    const editBtn = mkBtn('编辑', '编辑', 'edit');
+    const delBtn = mkBtn('删除', '删除', 'del');
+    delBtn.classList.add('btn-danger');
+    actions.appendChild(showBtn);
+    actions.appendChild(copyBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
+    row.appendChild(icon);
+    row.appendChild(main);
+    row.appendChild(pass);
+    row.appendChild(actions);
+    list.appendChild(row);
+  }
+}
+
+function pwExport(){
+  const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), entries: pwEntries }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '密码库备份.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  toast('已导出密码库备份');
+}
+
+function pwOpenImport(){
+  $('importEntriesText').value = '';
+  $('importEntriesErr').classList.remove('visible');
+  openModal('modalImportEntries');
+}
+function pwDoImport(){
+  const errEl = $('importEntriesErr');
+  let data;
+  try { data = JSON.parse($('importEntriesText').value); } catch { errEl.textContent = '无法解析：不是有效的 JSON。'; errEl.classList.add('visible'); return; }
+  const arr = data && Array.isArray(data.entries) ? data.entries : null;
+  if (!arr) { errEl.textContent = '备份格式不正确（缺少 entries 数组）。'; errEl.classList.add('visible'); return; }
+  let added = 0, merged = 0;
+  for (const item of arr) {
+    const domain = normalizeDomain(item.domain);
+    const account = String(item.account || '').trim();
+    const password = String(item.password || '');
+    if (!domain || !account || !password) continue;
+    const fields = (Array.isArray(item.fields) ? item.fields : [])
+      .filter(f => f && String(f.name).trim() && String(f.value).trim())
+      .map(f => ({ name: String(f.name).trim(), value: String(f.value).trim() }));
+    const existing = pwEntries.find(e => e.domain === domain && e.account === account);
+    if (existing) {
+      const incoming = item.updatedAt || '';
+      if (!existing.updatedAt || incoming > existing.updatedAt) { existing.password = password; existing.fields = fields; merged++; }
+    } else {
+      pwEntries.push({
+        id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.floor(Math.random() * 10000),
+        domain: domain,
+        account: account,
+        password: password,
+        fields: fields,
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString()
+      });
+      added++;
+    }
+  }
+  pwSaveEntries();
+  closeModal('modalImportEntries');
+  renderPwList();
+  toast('导入完成：新增 ' + added + ' 条，更新 ' + merged + ' 条');
+}
+
+function wirePwlibEvents(){
+  $('btnAddEntry').addEventListener('click', () => pwOpenEntry(null));
+  $('pwSearch').addEventListener('input', function(){ pwFilter = this.value; renderPwList(); });
+  $('btnSaveEntry').addEventListener('click', pwSaveEntry);
+  $('btnAddField').addEventListener('click', pwFieldNameStart);
+  $('fieldNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); pwFieldNameCommit(); }
+    else if (e.key === 'Escape') { e.stopPropagation(); pwFieldNameStop(); }
+  });
+  $('fieldNameInput').addEventListener('blur', pwFieldNameStop);
+  $('entryShowPass').addEventListener('change', () => { $('entryPassword').type = $('entryShowPass').checked ? 'text' : 'password'; });
+  ['entryDomain', 'entryAccount', 'entryPassword'].forEach(id => {
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pwSaveEntry(); } });
+  });
+  $('modalEntry').addEventListener('keydown', e => { if (e.key === 'Escape') pwCloseEntry(); });
+  $('modalImportEntries').addEventListener('keydown', e => { if (e.key === 'Escape') closeModal('modalImportEntries'); });
+  $('btnExportEntries').addEventListener('click', pwExport);
+  $('btnImportEntries').addEventListener('click', pwOpenImport);
+  $('btnDoImport').addEventListener('click', pwDoImport);
+
+  // 多标签页同步
+  window.addEventListener('storage', e => {
+    if (e.key === PW_STORE_KEY) { pwLoadEntries(); renderPwList(); }
+  });
+}
+
 /* ══════════ 事件绑定 ══════════ */
 
 function wireEvents(){
@@ -2110,6 +2764,8 @@ function wireEvents(){
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab));
+      if (tab.dataset.tab === 'pwlib') renderPwList();
+      else pwHideAllPasswords();
     });
   });
 
@@ -2215,10 +2871,14 @@ function init(){
   const d = new Date();
   d.setFullYear(d.getFullYear() + 3);
   $('cExpiry').value = fmtDate(d);
+  pwLoadEntries();
+  pwLoadIconCache();
   wireEvents();
   renderKeys();
   wirePasswordEvents();
+  wirePwlibEvents();
   setTimeout(pwGenerate, 50);
+  renderPwList();
 }
 
 init();
