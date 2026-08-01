@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>加密工具</title>
+<title>密码学小工具</title>
 <style>
   :root {
     --primary: #5D6D5D;
@@ -380,6 +380,207 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ── 密码生成 ── */
+  .pw-section { margin-bottom: 20px; }
+  .pw-section:last-of-type { margin-bottom: 16px; }
+  .length-row { display: flex; align-items: center; gap: 14px; }
+  .length-row input[type="range"] {
+    flex: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .length-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.14);
+    transition: box-shadow var(--transition), transform var(--transition);
+  }
+  .length-row input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    transform: scale(1.08);
+  }
+  .length-row input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.14);
+  }
+  .length-row input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(93,109,93,0.3); }
+  .length-display {
+    font-size: 20px; font-weight: 600;
+    color: var(--primary);
+    min-width: 36px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .char-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    min-height: 38px;
+    border-bottom: 1px solid var(--border);
+  }
+  .char-row:last-of-type { border-bottom: none; }
+  .char-row label.check-label {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; flex: 1;
+    user-select: none; -webkit-user-select: none;
+  }
+  .char-row input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer; flex-shrink: 0;
+  }
+  .char-label-text { font-size: 14px; line-height: 1.3; }
+  .char-hint { font-size: 12px; color: var(--text-tertiary); font-weight: 400; }
+  .min-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .min-group .min-label { font-size: 12px; color: var(--text-secondary); font-weight: 400; white-space: nowrap; }
+  .min-group input[type="number"] {
+    width: 42px;
+    padding: 3px 2px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    text-align: center;
+    color: var(--text);
+    background: var(--bg);
+    -moz-appearance: textfield;
+    transition: border-color var(--transition), opacity var(--transition);
+  }
+  .min-group input[type="number"]:disabled { opacity: 0.35; cursor: not-allowed; }
+  .min-group input[type="number"]::-webkit-outer-spin-button,
+  .min-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; min-height: 34px; }
+  .toggle-label { flex: 1; font-size: 14px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .toggle-hint { font-size: 12px; color: var(--text-tertiary); font-weight: 400; }
+  .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+  .toggle input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 1; }
+  .toggle input:focus-visible + .track { box-shadow: var(--focus-ring); }
+  .toggle .track {
+    position: absolute; inset: 0;
+    background: #D0D0D0;
+    border-radius: 11px;
+    transition: background var(--transition);
+  }
+  .toggle .track::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--transition);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+  }
+  .toggle input:checked + .track { background: var(--primary); }
+  .toggle input:checked + .track::after { transform: translateX(16px); }
+  .pw-error {
+    display: none;
+    font-size: 13px;
+    color: var(--error);
+    background: var(--error-bg);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .pw-error.visible { display: block; }
+  .btn-generate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 20px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+    -webkit-user-select: none; user-select: none;
+  }
+  .btn-generate:hover { background: var(--primary-hover); }
+  .btn-generate:active { transform: scale(0.98); }
+  .btn-generate .icon { font-size: 16px; line-height: 1; }
+  .password-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .password-section.hidden { display: none; }
+  .password-display { display: flex; align-items: center; gap: 8px; }
+  .password-display .pw-text {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", "PingFang SC", monospace;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    background: var(--bg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-height: 42px;
+    line-height: 1.4;
+  }
+  .btn-copy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px; height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color var(--transition), background var(--transition);
+    position: relative;
+  }
+  .btn-copy:hover { border-color: var(--primary); background: #F5F8F5; }
+  .btn-copy svg { width: 18px; height: 18px; color: var(--text-secondary); }
+  .btn-copy:hover svg { color: var(--primary); }
+  .btn-copy .tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: var(--text);
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .btn-copy .tooltip.show { opacity: 1; transform: translateX(-50%) scale(1); }
+  .strength-section { margin-top: 12px; }
+  .strength-bar { display: flex; gap: 4px; margin-bottom: 4px; }
+  .strength-bar .segment { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.25s ease; }
+  .strength-bar .segment.active.weak    { background: #C44E4E; }
+  .strength-bar .segment.active.medium  { background: #D4A04A; }
+  .strength-bar .segment.active.strong  { background: #5D8C5D; }
+  .strength-bar .segment.active.extreme { background: #3D7A5D; }
+  .strength-label { font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; }
+  .strength-label .bits { color: var(--text-tertiary); font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", monospace; font-size: 11px; }
+
   /* ── Footer ── */
   .page-footer { text-align: center; margin-top: 30px; font-size: 12px; color: var(--text-tertiary); line-height: 1.8; }
 
@@ -405,12 +606,13 @@
 <div class="container">
 
   <header class="page-header">
-    <h1>加密工具</h1>
+    <h1>密码学小工具</h1>
   </header>
 
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="keys" role="tab">管理密钥</button>
     <button class="tab" data-tab="notepad" role="tab">记事本</button>
+    <button class="tab" data-tab="password" role="tab">密码生成</button>
   </div>
 
   <!-- ═══════ 管理密钥 ═══════ -->
@@ -490,8 +692,140 @@
     </div>
   </section>
 
+  <!-- ═══════ 密码生成 ═══════ -->
+  <section id="tab-password" class="tab-panel">
+    <div class="card">
+      <div class="pw-section">
+        <div class="section-title">密码长度</div>
+        <div class="length-row">
+          <input type="range" id="pwLength" min="4" max="64" value="16" aria-label="密码长度">
+          <span class="length-display" id="lengthDisplay">16</span>
+        </div>
+      </div>
+
+      <div class="pw-section">
+        <div class="section-title">字符类型</div>
+
+        <div class="char-row">
+          <label class="check-label">
+            <input type="checkbox" id="chkUpper" checked>
+            <span class="char-label-text">
+              大写字母
+              <span class="char-hint">A-Z</span>
+            </span>
+          </label>
+          <div class="min-group">
+            <span class="min-label">最少</span>
+            <input type="number" id="minUpper" value="1" min="0" max="26" aria-label="大写字母最少个数">
+          </div>
+        </div>
+
+        <div class="char-row">
+          <label class="check-label">
+            <input type="checkbox" id="chkLower" checked>
+            <span class="char-label-text">
+              小写字母
+              <span class="char-hint">a-z</span>
+            </span>
+          </label>
+          <div class="min-group">
+            <span class="min-label">最少</span>
+            <input type="number" id="minLower" value="1" min="0" max="26" aria-label="小写字母最少个数">
+          </div>
+        </div>
+
+        <div class="char-row">
+          <label class="check-label">
+            <input type="checkbox" id="chkDigit" checked>
+            <span class="char-label-text">
+              数字
+              <span class="char-hint">0-9</span>
+            </span>
+          </label>
+          <div class="min-group">
+            <span class="min-label">最少</span>
+            <input type="number" id="minDigit" value="1" min="0" max="10" aria-label="数字最少个数">
+          </div>
+        </div>
+
+        <div class="char-row">
+          <label class="check-label">
+            <input type="checkbox" id="chkSpecial" checked>
+            <span class="char-label-text">
+              特殊符号
+              <span class="char-hint">!@#$%^*</span>
+            </span>
+          </label>
+          <div class="min-group">
+            <span class="min-label">最少</span>
+            <input type="number" id="minSpecial" value="1" min="0" max="8" aria-label="特殊符号最少个数">
+          </div>
+        </div>
+      </div>
+
+      <div class="pw-section">
+        <div class="section-title">选项</div>
+
+        <div class="toggle-row">
+          <label class="toggle-label" for="optAmbiguous">
+            排除易混淆字符
+            <span class="toggle-hint">1 l I o 0</span>
+          </label>
+          <div class="toggle">
+            <input type="checkbox" id="optAmbiguous">
+            <div class="track"></div>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle-label" for="optDuplicate">
+            无重复字符
+            <span class="toggle-hint">每个字符至多出现一次</span>
+          </label>
+          <div class="toggle">
+            <input type="checkbox" id="optDuplicate">
+            <div class="track"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pw-error" id="errorMsg"></div>
+
+      <button class="btn-generate" id="btnGenerate">
+        <span class="icon">&#x21bb;</span>
+        生成密码
+      </button>
+
+      <div class="password-section hidden" id="passwordSection">
+        <div class="password-display">
+          <span class="pw-text" id="passwordText"></span>
+          <button class="btn-copy" id="btnCopy" aria-label="复制密码">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span class="tooltip" id="copyTooltip">已复制!</span>
+          </button>
+        </div>
+
+        <div class="strength-section" id="strengthSection">
+          <div class="strength-bar" id="strengthBar">
+            <span class="segment"></span>
+            <span class="segment"></span>
+            <span class="segment"></span>
+            <span class="segment"></span>
+          </div>
+          <div class="strength-label">
+            <span id="strengthText"></span>
+            <span class="bits" id="strengthBits"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer class="page-footer">
-    本地 OpenPGP 工具 · OpenPGP.js v6.3.1 · 兼容 GnuPG 2.5+ / GPG4win 5+（OpenPGP v6 密钥）
+    密码学小工具 © Purrogram
   </footer>
 </div>
 
@@ -1616,6 +1950,158 @@ function toast(msg){
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+/* ══════════ 密码生成 ══════════ */
+
+const POOLS = {
+  upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  lower: 'abcdefghijklmnopqrstuvwxyz',
+  digit: '0123456789',
+  special: '!@#$%^*',
+};
+const AMBIGUOUS = '1lIo0';
+
+function pwRemoveChars(str, chars) {
+  const set = new Set(chars);
+  return str.split('').filter(c => !set.has(c)).join('');
+}
+function pwShuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function pwPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function pwPickN(arr, n) {
+  if (n === 0) return [];
+  const copy = arr.slice();
+  pwShuffle(copy);
+  return copy.slice(0, n);
+}
+
+function pwGetPools() {
+  const ambiguous = $('optAmbiguous').checked;
+  const pools = [];
+  function addPool(key, checkedEl, minEl, fullSet) {
+    if (!checkedEl.checked) return;
+    let chars = fullSet;
+    if (ambiguous) chars = pwRemoveChars(chars, AMBIGUOUS);
+    const min = Math.max(0, parseInt(minEl.value, 10) || 0);
+    pools.push({ key, chars, min });
+  }
+  addPool('upper', $('chkUpper'), $('minUpper'), POOLS.upper);
+  addPool('lower', $('chkLower'), $('minLower'), POOLS.lower);
+  addPool('digit', $('chkDigit'), $('minDigit'), POOLS.digit);
+  addPool('special', $('chkSpecial'), $('minSpecial'), POOLS.special);
+  return pools;
+}
+
+function pwGetCombinedPool(pools) {
+  const set = new Set();
+  for (const p of pools) for (const c of p.chars) set.add(c);
+  return Array.from(set);
+}
+
+function pwValidate(length, pools) {
+  if (pools.length === 0) return '请至少选择一种字符类型。';
+  const totalMin = pools.reduce((s, p) => s + p.min, 0);
+  if (totalMin > length) return `各类型最少字符数之和 (${totalMin}) 超过了密码长度 (${length})，请减少最少个数或增加密码长度。`;
+  const names = { upper: '大写字母', lower: '小写字母', digit: '数字', special: '特殊符号' };
+  for (const p of pools) {
+    if (p.min > p.chars.length)
+      return `"${names[p.key] || p.key}" 排除易混淆字符后可用字符不足 ${p.min} 个（仅剩 ${p.chars.length} 个），请减少该类型的最少个数。`;
+  }
+  if ($('optDuplicate').checked) {
+    const combined = pwGetCombinedPool(pools);
+    if (combined.length < length)
+      return `"无重复字符" 模式下，可用字符集仅 ${combined.length} 个唯一字符，无法生成 ${length} 位无重复密码。请增加字符类型或减少密码长度。`;
+  }
+  return null;
+}
+
+function pwGenerate() {
+  const length = parseInt($('pwLength').value, 10);
+  const pools = pwGetPools();
+  const err = pwValidate(length, pools);
+  if (err) {
+    $('errorMsg').textContent = err;
+    $('errorMsg').classList.add('visible');
+    $('passwordSection').classList.add('hidden');
+    return;
+  }
+  $('errorMsg').classList.remove('visible');
+
+  let password = [];
+  for (const p of pools) {
+    if (p.min > 0) password.push(...pwPickN(p.chars.split(''), p.min));
+  }
+  const remaining = length - password.length;
+  if (remaining > 0) {
+    if ($('optDuplicate').checked) {
+      const used = new Set(password);
+      const combined = pwGetCombinedPool(pools).filter(c => !used.has(c));
+      password.push(...pwPickN(combined, remaining));
+    } else {
+      const combined = pwGetCombinedPool(pools);
+      for (let i = 0; i < remaining; i++) password.push(pwPick(combined));
+    }
+  }
+  pwShuffle(password);
+  pwShowResult(password.join(''), length, pools);
+}
+
+function pwCalcStrength(password, pools) {
+  const combined = pwGetCombinedPool(pools);
+  const poolSize = combined.length;
+  const entropy = password.length * Math.log2(poolSize);
+  let level;
+  if (entropy < 30) level = 'weak';
+  else if (entropy < 50) level = 'medium';
+  else if (entropy < 70) level = 'strong';
+  else level = 'extreme';
+  return { entropy, level, poolSize };
+}
+
+function pwShowResult(password, length, pools) {
+  $('passwordText').textContent = password;
+  $('passwordSection').classList.remove('hidden');
+  const { entropy, level, poolSize } = pwCalcStrength(password, pools);
+  const segments = $('strengthBar').querySelectorAll('.segment');
+  const levels = ['weak', 'medium', 'strong', 'extreme'];
+  const levelIdx = levels.indexOf(level);
+  segments.forEach((seg, i) => {
+    seg.className = 'segment';
+    if (i <= levelIdx) seg.classList.add('active', level);
+  });
+  const labels = { weak: '弱', medium: '中', strong: '强', extreme: '非常强' };
+  $('strengthText').textContent = `密码强度：${labels[level]}`;
+  $('strengthBits').textContent = `字符池 ${poolSize} · 熵 ${entropy.toFixed(1)} bit`;
+}
+
+function pwSyncMinState() {
+  $('minUpper').disabled = !$('chkUpper').checked;
+  $('minLower').disabled = !$('chkLower').checked;
+  $('minDigit').disabled = !$('chkDigit').checked;
+  $('minSpecial').disabled = !$('chkSpecial').checked;
+}
+
+function wirePasswordEvents() {
+  $('btnCopy').addEventListener('click', function() {
+    const text = $('passwordText').textContent;
+    if (!text) return;
+    copyText(text);
+    const tip = $('copyTooltip');
+    tip.classList.add('show');
+    setTimeout(() => tip.classList.remove('show'), 1800);
+  });
+  $('btnGenerate').addEventListener('click', pwGenerate);
+  $('pwLength').addEventListener('input', function() { $('lengthDisplay').textContent = this.value; });
+  ['chkUpper', 'chkLower', 'chkDigit', 'chkSpecial'].forEach(id => {
+    $(id).addEventListener('change', pwSyncMinState);
+  });
+  pwSyncMinState();
+}
+
 /* ══════════ 事件绑定 ══════════ */
 
 function wireEvents(){
@@ -1731,6 +2217,8 @@ function init(){
   $('cExpiry').value = fmtDate(d);
   wireEvents();
   renderKeys();
+  wirePasswordEvents();
+  setTimeout(pwGenerate, 50);
 }
 
 init();
