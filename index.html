@@ -644,7 +644,10 @@
     font-weight: 600;
     color: #fff;
     user-select: none;
+    cursor: pointer;
+    transition: box-shadow var(--transition);
   }
+  .pw-favicon:hover { box-shadow: var(--focus-ring); }
   .pw-favicon img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
   .pw-main { flex: 1; min-width: 0; }
   .pw-domain { font-size: 14.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -666,46 +669,44 @@
   .pw-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
   /* ── 要素 ── */
-  .entry-field-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 4px 4px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    margin-bottom: 8px;
-    transition: border-color var(--transition), box-shadow var(--transition);
-  }
-  .entry-field-row:focus-within { border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .entry-field-row { margin-bottom: 14px; }
   .entry-field-row .ef-name {
-    flex-shrink: 0;
-    max-width: 140px;
+    display: block;
     font-size: 13px;
     color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .entry-field-row .ef-value {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    background: none;
-    box-shadow: none !important;
-    padding: 6px 2px;
+  .entry-field-row .ef-wrap { position: relative; }
+  .entry-field-row .ef-wrap .ef-value {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: 9px 40px 9px 12px;
     font-size: 14px;
     font-family: inherit;
     color: var(--text);
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .entry-field-row .ef-wrap .ef-value:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
   }
   .entry-field-row .ef-del {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 30px;
     height: 30px;
-    flex-shrink: 0;
     border: none;
     border-radius: 5px;
     background: none;
@@ -759,6 +760,7 @@
     <button class="tab" data-tab="notepad" role="tab">记事本</button>
     <button class="tab" data-tab="password" role="tab">密码生成</button>
     <button class="tab" data-tab="pwlib" role="tab">密码库</button>
+    <button class="tab" data-tab="sync" role="tab">同步</button>
   </div>
 
   <!-- ═══════ 管理密钥 ═══════ -->
@@ -992,6 +994,55 @@
     <p class="storage-note">密码仅保存在本机浏览器（localStorage）中，不经过任何网络。</p>
   </section>
 
+  <!-- ═══════ WebDAV 同步 ═══════ -->
+  <section id="tab-sync" class="tab-panel">
+    <div class="card">
+      <div class="section-title">同步设置</div>
+      <div class="field">
+        <label class="field-label" for="syncUrl">WebDAV 服务器地址</label>
+        <input type="text" id="syncUrl" placeholder="输入服务器地址" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="syncUser">账号</label>
+          <input type="text" id="syncUser" autocomplete="username">
+        </div>
+        <div class="field">
+          <label class="field-label" for="syncPass">密码</label>
+          <span class="np-field pw-field" style="display:block">
+            <input type="password" id="syncPass" autocomplete="current-password">
+            <button class="pw-toggle" type="button" data-pw-for="syncPass" aria-label="显示密码"><svg><use href="#i-eye"/></svg></button>
+          </span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="syncFileName">远程文件名</label>
+          <input type="text" id="syncFileName" value="secpgp-backup" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label" for="syncKey">加密 / 解密密钥</label>
+          <select id="syncKey"></select>
+        </div>
+      </div>
+      <div class="np-actions">
+        <button class="btn btn-ghost" id="btnSyncSave">保存设置</button>
+        <button class="btn btn-ghost" id="btnSyncTest">测试连接</button>
+      </div>
+      <p class="modal-note">凭证明文保存在本机浏览器（密码不落盘，关浏览器即清）。WebDAV 服务端需允许 CORS（返回 Access-Control-Allow-Origin 并放行 OPTIONS 预检），且必须使用 HTTPS。远程文件以你的公钥加密存储，只有对应私钥可解密。</p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">同步操作</div>
+      <div class="np-actions">
+        <button class="btn" id="btnSyncPush">推送（加密上传）</button>
+        <button class="btn" id="btnSyncPull">拉取（下载恢复）</button>
+      </div>
+      <div id="syncStatus" class="status-banner hidden"></div>
+      <p class="modal-note">拉取会用远程备份覆盖本地全部密钥和密码，操作前请确认。</p>
+    </div>
+  </section>
+
   <footer class="page-footer">
     密码学小工具 © Purrogram
   </footer>
@@ -1159,23 +1210,30 @@
 
     <div class="form-error" id="entryErr"></div>
 
-    <div class="field">
-      <label class="field-label" for="entryDomain">账号网址</label>
-      <input type="text" id="entryDomain" placeholder="输入账号网址" autocomplete="off">
-    </div>
-
-    <div class="field">
-      <label class="field-label" for="entryAccount">名称</label>
-      <input type="text" id="entryAccount" placeholder="输入项目名称" autocomplete="off">
-    </div>
-
-    <div class="field">
-      <div class="field-head">
-        <label class="field-label" for="entryPassword">密码</label>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="entryAccount">项目名称</label>
+        <input type="text" id="entryAccount" placeholder="输入项目名称" autocomplete="off">
       </div>
-      <div class="pw-field">
-        <input type="password" id="entryPassword" placeholder="留空则使用随机密码" autocomplete="new-password">
-        <button class="pw-toggle" type="button" data-pw-for="entryPassword" aria-label="显示密码"><svg><use href="#i-eye"/></svg></button>
+      <div class="field">
+        <label class="field-label" for="entryDomain">URL</label>
+        <input type="text" id="entryDomain" placeholder="输入账号网址" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="entryUsername">用户名</label>
+        <input type="text" id="entryUsername" placeholder="用户名/手机号/邮箱" autocomplete="off">
+      </div>
+      <div class="field">
+        <div class="field-head">
+          <label class="field-label" for="entryPassword">密码</label>
+        </div>
+        <div class="pw-field">
+          <input type="password" id="entryPassword" placeholder="输入账号密码" autocomplete="new-password">
+          <button class="pw-toggle" type="button" data-pw-for="entryPassword" aria-label="显示密码"><svg><use href="#i-eye"/></svg></button>
+        </div>
       </div>
     </div>
 
@@ -1185,7 +1243,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-mini btn-ghost" id="btnAddField" type="button">添加要素</button>
+      <button class="btn btn-ghost" id="btnAddField" type="button">添加要素</button>
       <button class="btn btn-ghost" data-close="modalEntry">取消</button>
       <button class="btn" id="btnSaveEntry">保存</button>
     </div>
@@ -1452,6 +1510,7 @@ function renderNotepadSelects(){
 
 async function renderKeys(){
   renderNotepadSelects();
+  syncRenderKeySelect();
   const empty = $('keysEmpty'), list = $('keysList');
   const hasKeys = keys.length > 0;
   empty.classList.toggle('hidden', hasKeys);
@@ -1911,8 +1970,9 @@ async function getDecryptedPrivate(fp){
 /* ══════════ 确认弹窗 ══════════ */
 
 let confirmResolver = null;
-function confirmDialog(msg){
+function confirmDialog(msg, yesText){
   $('confirmMsg').textContent = msg;
+  $('confirmYes').textContent = yesText || '删除';
   openModal('modalConfirm');
   return new Promise(resolve => { confirmResolver = resolve; });
 }
@@ -2347,6 +2407,7 @@ let pwEditingId = null;
 
 const PW_ICON_PATHS = ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'];
 const PW_COLORS = ['#5D6D5D', '#8B7D5D', '#5D7D8B', '#7D5D8B', '#8B5D5D', '#5D8B7D', '#8B6D5D'];
+const pwSort = new Intl.Collator('zh-Hans-CN', { numeric: true });
 
 function pwLoadEntries(){
   try {
@@ -2385,19 +2446,33 @@ function pwColorFor(host){
   return PW_COLORS[h % PW_COLORS.length];
 }
 
+// 图标缓存值解码：'favicon.ico' → web；'placeholder' → 占位；'data:image/...' → 自定义；空 → 未探测
+function pwIconDecode(apex){
+  const v = pwIconCache[apex];
+  if (!v) return { kind: null };
+  if (v === 'placeholder') return { kind: 'placeholder' };
+  if (String(v).indexOf('data:') === 0) return { kind: 'custom', value: String(v) };
+  return { kind: 'web', value: String(v) };
+}
+
 // favicon 渐进增强：先渲染首字母占位，再异步探测图标，成功才替换（隐藏首字母）。
 function pwAttachFavicon(host, iconEl, initialEl){
   const apex = apexDomain(host);
   initialEl.textContent = pwInitial(host);
   initialEl.style.background = pwColorFor(host);
-  const cached = pwIconCache[apex];
-  if (!cached || cached === 'placeholder') {
-    if (!cached) pwProbeFavicon(apex, iconEl, initialEl);
+  initialEl.style.display = '';
+  iconEl.removeAttribute('src');
+  iconEl.style.display = '';
+  const hit = pwIconDecode(apex);
+  if (hit.kind === 'custom' || hit.kind === 'web') {
+    iconEl.onerror = () => { iconEl.style.display = 'none'; initialEl.style.display = ''; };
+    iconEl.src = hit.kind === 'custom' ? hit.value : 'https://' + apex + '/' + hit.value;
+    iconEl.alt = '';
+    initialEl.style.display = 'none';
     return;
   }
-  iconEl.src = 'https://' + apex + '/' + cached;
-  iconEl.alt = '';
-  initialEl.style.display = 'none';
+  if (hit.kind === 'placeholder') return;
+  pwProbeFavicon(apex, iconEl, initialEl);
 }
 function pwProbeFavicon(apex, iconEl, initialEl){
   const tryPath = idx => {
@@ -2413,6 +2488,7 @@ function pwProbeFavicon(apex, iconEl, initialEl){
       if (img.naturalWidth > 0) {
         pwIconCache[apex] = path;
         pwSaveIconCache();
+        iconEl.onerror = null;
         iconEl.src = 'https://' + apex + '/' + path;
         iconEl.alt = '';
         if (initialEl) initialEl.style.display = 'none';
@@ -2422,6 +2498,61 @@ function pwProbeFavicon(apex, iconEl, initialEl){
     img.src = 'https://' + apex + '/' + path;
   };
   tryPath(0);
+}
+function pwSetCustomIcon(apex, dataUrl){
+  pwIconCache[apex] = dataUrl;
+  pwSaveIconCache();
+}
+function pwResetIcon(apex){
+  delete pwIconCache[apex];
+  pwSaveIconCache();
+}
+
+// 本地图片 → 缩到 maxSize 正方形 PNG dataURL（canvas 压缩，控制 localStorage 体积）
+function downscaleImageFile(file, maxSize){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * scale));
+        c.height = Math.max(1, Math.round(img.height * scale));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/png'));
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('读取图片失败')); };
+    img.src = url;
+  });
+}
+
+// 双击头像 → 选本地图片设为自定义头像
+function pwPickCustomIcon(host, iconEl, initialEl){
+  const apex = apexDomain(host);
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    document.body.removeChild(input);
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { toast('图片过大，请选 8MB 以内'); return; }
+    try {
+      const dataUrl = await downscaleImageFile(file, 96);
+      pwSetCustomIcon(apex, dataUrl);
+      iconEl.onerror = null;
+      iconEl.src = dataUrl;
+      iconEl.style.display = '';
+      if (initialEl) initialEl.style.display = 'none';
+      toast('已设置自定义头像');
+    } catch { toast('读取图片失败'); }
+  });
+  input.click();
 }
 
 function genRandomPassword(len){
@@ -2449,7 +2580,8 @@ function pwOpenEntry(id){
   $('entryTitle').textContent = rec ? '编辑密码' : '新增密码';
   $('entryDomain').value = rec ? rec.domain : '';
   $('entryAccount').value = rec ? rec.account : '';
-  $('entryPassword').value = '';
+  $('entryUsername').value = rec ? (rec.username || '') : '';
+  $('entryPassword').value = rec ? rec.password : '';
   resetPwToggle('entryPassword');
   $('entryErr').classList.remove('visible');
   $('entryFields').innerHTML = '';
@@ -2457,7 +2589,6 @@ function pwOpenEntry(id){
     rec.fields.forEach(f => pwAddFieldRow(f.name, f.value));
   }
   openModal('modalEntry');
-  setTimeout(() => $('entryDomain').focus(), 30);
 }
 function pwCloseEntry(){ closeModal('modalEntry'); }
 
@@ -2491,9 +2622,13 @@ function pwAddFieldRow(name, value){
   delBtn.appendChild(svg);
   delBtn.addEventListener('click', () => row.remove());
 
+  const wrapDiv = document.createElement('div');
+  wrapDiv.className = 'ef-wrap';
+  wrapDiv.appendChild(valueInput);
+  wrapDiv.appendChild(delBtn);
+
   row.appendChild(nameSpan);
-  row.appendChild(valueInput);
-  row.appendChild(delBtn);
+  row.appendChild(wrapDiv);
   wrap.appendChild(row);
   valueInput.focus();
 }
@@ -2526,9 +2661,10 @@ function pwSaveEntry(){
   const errEl = $('entryErr');
   const domain = normalizeDomain($('entryDomain').value);
   const account = $('entryAccount').value.trim();
+  const username = $('entryUsername').value.trim();
   const password = $('entryPassword').value;
-  if (!domain) { errEl.textContent = '请输入有效的账号网址（如 github.com）。'; errEl.classList.add('visible'); return; }
-  if (!account) { errEl.textContent = '请输入名称。'; errEl.classList.add('visible'); return; }
+  if (!domain) { errEl.textContent = '请输入有效的账号网址'; errEl.classList.add('visible'); return; }
+  if (!account) { errEl.textContent = '请输入项目名称。'; errEl.classList.add('visible'); return; }
   if (!pwEditingId && !password) { errEl.textContent = '请输入密码。'; errEl.classList.add('visible'); return; }
 
   // 收集要素：名称与值都填了才保存；名称重复的报错
@@ -2552,6 +2688,7 @@ function pwSaveEntry(){
     const dup = pwEntries.find(e => e.id !== pwEditingId && e.domain === domain && e.account === account);
     rec.domain = domain;
     rec.account = account;
+    rec.username = username;
     if (password) rec.password = password;
     rec.fields = fields;
     rec.updatedAt = new Date().toISOString();
@@ -2562,6 +2699,7 @@ function pwSaveEntry(){
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.floor(Math.random() * 10000),
       domain: domain,
       account: account,
+      username: username,
       password: password || genRandomPassword(16),
       fields: fields,
       createdAt: new Date().toISOString(),
@@ -2629,7 +2767,7 @@ function renderPwList(){
   const list = $('pwList');
   const empty = $('pwEmpty');
   const q = pwFilter.trim().toLowerCase();
-  let items = pwEntries.slice().sort((a, b) => a.domain.localeCompare(b.domain) || a.account.localeCompare(b.account));
+  let items = pwEntries.slice().sort((a, b) => pwSort.compare(a.account, b.account) || pwSort.compare(a.domain, b.domain));
   if (q) {
     items = items.filter(e => {
       if (e.domain.toLowerCase().includes(q) || e.account.toLowerCase().includes(q)) return true;
@@ -2687,6 +2825,23 @@ function renderPwList(){
     img.loading = 'lazy';
     icon.appendChild(img);
     pwAttachFavicon(rec.domain, img, initial);
+    icon.title = '双击更换头像 · 长按恢复默认';
+    let holdTimer = null;
+    icon.addEventListener('dblclick', e => { e.stopPropagation(); pwPickCustomIcon(rec.domain, img, initial); });
+    icon.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (holdTimer) return;
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        pwResetIcon(apexDomain(rec.domain));
+        renderPwList();
+        toast('已恢复默认图标');
+      }, 600);
+    });
+    const cancelHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } };
+    icon.addEventListener('pointerup', cancelHold);
+    icon.addEventListener('pointerleave', cancelHold);
+    icon.addEventListener('pointercancel', cancelHold);
 
     const main = document.createElement('div');
     main.className = 'pw-main';
@@ -2814,7 +2969,7 @@ function wirePwlibEvents(){
     else if (e.key === 'Escape') { e.stopPropagation(); pwFieldNameStop(); }
   });
   $('fieldNameInput').addEventListener('blur', pwFieldNameStop);
-  ['entryDomain', 'entryAccount', 'entryPassword'].forEach(id => {
+  ['entryAccount', 'entryDomain', 'entryUsername', 'entryPassword'].forEach(id => {
     $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pwSaveEntry(); } });
   });
   $('modalEntry').addEventListener('keydown', e => { if (e.key === 'Escape') pwCloseEntry(); });
@@ -2822,6 +2977,12 @@ function wirePwlibEvents(){
   $('btnExportEntries').addEventListener('click', pwExport);
   $('btnImportEntries').addEventListener('click', pwOpenImport);
   $('btnDoImport').addEventListener('click', pwDoImport);
+
+  // 同步
+  $('btnSyncSave').addEventListener('click', () => { syncReadForm(); syncSaveCfg(); syncFillForm(); toast('同步设置已保存'); });
+  $('btnSyncTest').addEventListener('click', syncTest);
+  $('btnSyncPush').addEventListener('click', syncPush);
+  $('btnSyncPull').addEventListener('click', syncPull);
 
   // 多标签页同步
   window.addEventListener('storage', e => {
@@ -2846,21 +3007,12 @@ function wireEvents(){
   document.querySelectorAll('[data-close]').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.close));
   });
-  let guardClick = false;
   document.querySelectorAll('.modal-overlay').forEach(ov => {
-    // pointerdown 先于 blur 派发：此时输入框仍可见，收起它并标记本次点击不关弹窗
+    // 点击阴影不再取消弹窗；modalEntry 若要素名称输入框可见则顺手收起
     ov.addEventListener('pointerdown', e => {
       if (e.target === ov && ov.id === 'modalEntry' && pwFieldNameVisible()) {
         pwFieldNameStop();
-        guardClick = true;
       }
-    });
-    ov.addEventListener('click', e => {
-      if (e.target !== ov) return;
-      if (guardClick) { guardClick = false; return; }
-      if (ov.id === 'modalPass') resolvePass(null);
-      else if (ov.id === 'modalConfirm') resolveConfirm(false);
-      else ov.classList.remove('open');
     });
   });
 
@@ -2969,6 +3121,142 @@ function wireEvents(){
   };
 }
 
+/* ══════════ WebDAV 同步 ══════════ */
+
+const SYNC_CFG_KEY = 'openpgp_sync_cfg_v1';
+const SYNC_DEFAULTS = { url: '', user: '', fileName: 'secpgp-backup', encryptFp: '' };
+let syncCfg = Object.assign({}, SYNC_DEFAULTS, { pass: '' });
+
+function syncLoadCfg(){
+  try {
+    const raw = readStore(SYNC_CFG_KEY);
+    if (raw) syncCfg = Object.assign({}, SYNC_DEFAULTS, JSON.parse(raw));
+  } catch { syncCfg = Object.assign({}, SYNC_DEFAULTS); }
+  try { syncCfg.pass = sessionStorage.getItem('openpgp_sync_pass') || ''; } catch {}
+}
+function syncSaveCfg(){
+  const { pass, ...rest } = syncCfg;
+  writeStore(SYNC_CFG_KEY, JSON.stringify(Object.assign({}, SYNC_DEFAULTS, rest)));
+  try { sessionStorage.setItem('openpgp_sync_pass', syncCfg.pass); } catch {}
+}
+function syncRenderKeySelect(){
+  const el = $('syncKey');
+  if (!el) return;
+  el.innerHTML = '';
+  const o = document.createElement('option');
+  o.value = '';
+  o.textContent = '— 选择本机密钥 —';
+  el.appendChild(o);
+  keys.filter(k => k.hasPrivate).forEach(k => {
+    const op = document.createElement('option');
+    op.value = k.fingerprint;
+    op.textContent = userIDLabel(k);
+    el.appendChild(op);
+  });
+  el.value = syncCfg.encryptFp;
+}
+function syncReadForm(){
+  syncCfg.url = $('syncUrl').value.trim();
+  syncCfg.user = $('syncUser').value.trim();
+  syncCfg.pass = $('syncPass').value;
+  syncCfg.fileName = ($('syncFileName').value.trim() || SYNC_DEFAULTS.fileName).replace(/\.asc$/i, '');
+  syncCfg.encryptFp = $('syncKey').value;
+}
+function syncFillForm(){
+  $('syncUrl').value = syncCfg.url;
+  $('syncUser').value = syncCfg.user;
+  $('syncPass').value = syncCfg.pass;
+  $('syncFileName').value = syncCfg.fileName;
+  syncRenderKeySelect();
+}
+function syncAuth(){
+  return 'Basic ' + btoa(unescape(encodeURIComponent(syncCfg.user + ':' + syncCfg.pass)));
+}
+function syncFileUrl(){
+  return syncCfg.url.replace(/\/?$/, '/') + syncCfg.fileName + '.asc';
+}
+function syncShowStatus(msg, cls){
+  const s = $('syncStatus');
+  s.textContent = msg;
+  s.className = 'status-banner ' + (cls || 'info');
+  s.classList.remove('hidden');
+}
+function isCorsErr(e){
+  return e instanceof TypeError && /failed to fetch/i.test(String(e.message));
+}
+function syncValidateCfg(){
+  if (!syncCfg.url || !/^https?:\/\//i.test(syncCfg.url)) throw new Error('请输入 WebDAV 目录 URL（含 https://）');
+  if (!syncCfg.encryptFp) throw new Error('请选择加密 / 解密密钥');
+}
+
+async function syncTest(){
+  syncReadForm(); syncSaveCfg();
+  try {
+    const resp = await fetch(syncFileUrl(), { method: 'HEAD', headers: { Authorization: syncAuth() } });
+    if (resp.status === 401 || resp.status === 403) syncShowStatus('账号或密码错误（HTTP ' + resp.status + '）。', 'error');
+    else syncShowStatus('连接成功（HTTP ' + resp.status + '）' + (resp.status === 404 ? '，远程文件尚不存在。' : '。'), 'ok');
+  } catch (e) {
+    syncShowStatus('无法连接：网络问题或服务端未开启 CORS（需返回 Access-Control-Allow-Origin 并响应预检）。', 'error');
+  }
+}
+
+async function syncPush(){
+  syncReadForm(); syncSaveCfg();
+  let rec;
+  try { syncValidateCfg(); rec = getRec(syncCfg.encryptFp); if (!rec) throw new Error('找不到所选密钥'); }
+  catch (e) { syncShowStatus(e.message, 'error'); return; }
+  $('btnSyncPush').disabled = true;
+  try {
+    const payload = { version: 1, type: 'purrogram-backup', exportedAt: new Date().toISOString(), keys, entries: pwEntries };
+    const message = await openpgp.createMessage({ text: JSON.stringify(payload) });
+    const opts = { message, encryptionKeys: [await openpgp.readKey({ armoredKey: rec.publicArmored })], format: 'armored' };
+    try { opts.signingKeys = [await getDecryptedPrivate(rec.fingerprint)]; } catch {}
+    const armored = await openpgp.encrypt(opts);
+    const resp = await fetch(syncFileUrl(), {
+      method: 'PUT',
+      headers: { Authorization: syncAuth(), 'Content-Type': 'application/pgp-encrypted' },
+      body: armored
+    });
+    if (!resp.ok) { syncShowStatus('上传失败：HTTP ' + resp.status, 'error'); return; }
+    syncShowStatus('已加密上传：' + keys.length + ' 条密钥 / ' + pwEntries.length + ' 条密码。', 'ok');
+  } catch (e) {
+    syncShowStatus('上传失败：' + friendlyError(e && e.message) + (isCorsErr(e) ? '（可能未开 CORS）' : ''), 'error');
+  } finally { $('btnSyncPush').disabled = false; }
+}
+
+async function syncPull(){
+  syncReadForm(); syncSaveCfg();
+  let rec;
+  try { syncValidateCfg(); rec = getRec(syncCfg.encryptFp); if (!rec) throw new Error('找不到所选密钥'); }
+  catch (e) { syncShowStatus(e.message, 'error'); return; }
+  $('btnSyncPull').disabled = true;
+  try {
+    const resp = await fetch(syncFileUrl(), { method: 'GET', headers: { Authorization: syncAuth() } });
+    if (resp.status === 404) { syncShowStatus('远程文件不存在，请先在其它设备推送一次。', 'error'); return; }
+    if (resp.status === 401 || resp.status === 403) { syncShowStatus('账号或密码错误（HTTP ' + resp.status + '）。', 'error'); return; }
+    if (!resp.ok) { syncShowStatus('下载失败：HTTP ' + resp.status, 'error'); return; }
+    const armored = await resp.text();
+    const priv = await getDecryptedPrivate(rec.fingerprint);
+    const msg = await openpgp.readMessage({ armoredMessage: armored });
+    const dec = await openpgp.decrypt({ message: msg, decryptionKeys: [priv] });
+    const payload = JSON.parse(dec.data);
+    if (!payload || payload.type !== 'purrogram-backup' || !Array.isArray(payload.keys) || !Array.isArray(payload.entries)) {
+      throw new Error('远程文件不是有效的 Purrogram 备份');
+    }
+    const ok = await confirmDialog(
+      '将用远程备份覆盖本地：本地现有 ' + keys.length + ' 条密钥、' + pwEntries.length + ' 条密码；远程包含 ' +
+      payload.keys.length + ' 条密钥、' + payload.entries.length + ' 条密码。覆盖后本地数据不可恢复，是否继续？', '覆盖');
+    if (!ok) { syncShowStatus('已取消。', 'info'); return; }
+    keys = payload.keys;
+    pwEntries = payload.entries;
+    saveKeys(); renderKeys(); syncRenderKeySelect();
+    pwSaveEntries(); renderPwList();
+    syncShowStatus('同步完成：' + keys.length + ' 条密钥 / ' + pwEntries.length + ' 条密码。', 'ok');
+  } catch (e) {
+    syncShowStatus('拉取失败：' + friendlyError(e && e.message) + (isCorsErr(e) ? '（可能未开 CORS）' : ''), 'error');
+  } finally { $('btnSyncPull').disabled = false; }
+}
+
 /* ══════════ 初始化 ══════════ */
 
 function init(){
@@ -2979,8 +3267,10 @@ function init(){
   $('cExpiry').value = fmtDate(d);
   pwLoadEntries();
   pwLoadIconCache();
+  syncLoadCfg();
   wireEvents();
   renderKeys();
+  syncFillForm();
   wirePasswordEvents();
   wirePwlibEvents();
   setTimeout(pwGenerate, 50);
