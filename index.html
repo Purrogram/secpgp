@@ -760,7 +760,6 @@
     <button class="tab" data-tab="notepad" role="tab">记事本</button>
     <button class="tab" data-tab="password" role="tab">密码生成</button>
     <button class="tab" data-tab="pwlib" role="tab">密码库</button>
-    <button class="tab" data-tab="sync" role="tab">同步</button>
   </div>
 
   <!-- ═══════ 管理密钥 ═══════ -->
@@ -992,55 +991,6 @@
     <div id="pwList" class="pw-list hidden"></div>
 
     <p class="storage-note">密码仅保存在本机浏览器（localStorage）中，不经过任何网络。</p>
-  </section>
-
-  <!-- ═══════ WebDAV 同步 ═══════ -->
-  <section id="tab-sync" class="tab-panel">
-    <div class="card">
-      <div class="section-title">同步设置</div>
-      <div class="field">
-        <label class="field-label" for="syncUrl">WebDAV 服务器地址</label>
-        <input type="text" id="syncUrl" placeholder="输入服务器地址" autocomplete="off">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label" for="syncUser">账号</label>
-          <input type="text" id="syncUser" autocomplete="username">
-        </div>
-        <div class="field">
-          <label class="field-label" for="syncPass">密码</label>
-          <span class="np-field pw-field" style="display:block">
-            <input type="password" id="syncPass" autocomplete="current-password">
-            <button class="pw-toggle" type="button" data-pw-for="syncPass" aria-label="显示密码"><svg><use href="#i-eye"/></svg></button>
-          </span>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label" for="syncFileName">远程文件名</label>
-          <input type="text" id="syncFileName" value="secpgp-backup" autocomplete="off">
-        </div>
-        <div class="field">
-          <label class="field-label" for="syncKey">加密 / 解密密钥</label>
-          <select id="syncKey"></select>
-        </div>
-      </div>
-      <div class="np-actions">
-        <button class="btn btn-ghost" id="btnSyncSave">保存设置</button>
-        <button class="btn btn-ghost" id="btnSyncTest">测试连接</button>
-      </div>
-      <p class="modal-note">凭证明文保存在本机浏览器（密码不落盘，关浏览器即清）。WebDAV 服务端需允许 CORS（返回 Access-Control-Allow-Origin 并放行 OPTIONS 预检），且必须使用 HTTPS。远程文件以你的公钥加密存储，只有对应私钥可解密。</p>
-    </div>
-
-    <div class="card">
-      <div class="section-title">同步操作</div>
-      <div class="np-actions">
-        <button class="btn" id="btnSyncPush">推送（加密上传）</button>
-        <button class="btn" id="btnSyncPull">拉取（下载恢复）</button>
-      </div>
-      <div id="syncStatus" class="status-banner hidden"></div>
-      <p class="modal-note">拉取会用远程备份覆盖本地全部密钥和密码，操作前请确认。</p>
-    </div>
   </section>
 
   <footer class="page-footer">
@@ -1510,7 +1460,6 @@ function renderNotepadSelects(){
 
 async function renderKeys(){
   renderNotepadSelects();
-  syncRenderKeySelect();
   const empty = $('keysEmpty'), list = $('keysList');
   const hasKeys = keys.length > 0;
   empty.classList.toggle('hidden', hasKeys);
@@ -2978,12 +2927,6 @@ function wirePwlibEvents(){
   $('btnImportEntries').addEventListener('click', pwOpenImport);
   $('btnDoImport').addEventListener('click', pwDoImport);
 
-  // 同步
-  $('btnSyncSave').addEventListener('click', () => { syncReadForm(); syncSaveCfg(); syncFillForm(); toast('同步设置已保存'); });
-  $('btnSyncTest').addEventListener('click', syncTest);
-  $('btnSyncPush').addEventListener('click', syncPush);
-  $('btnSyncPull').addEventListener('click', syncPull);
-
   // 多标签页同步
   window.addEventListener('storage', e => {
     if (e.key === PW_STORE_KEY) { pwLoadEntries(); renderPwList(); }
@@ -3121,142 +3064,6 @@ function wireEvents(){
   };
 }
 
-/* ══════════ WebDAV 同步 ══════════ */
-
-const SYNC_CFG_KEY = 'openpgp_sync_cfg_v1';
-const SYNC_DEFAULTS = { url: '', user: '', fileName: 'secpgp-backup', encryptFp: '' };
-let syncCfg = Object.assign({}, SYNC_DEFAULTS, { pass: '' });
-
-function syncLoadCfg(){
-  try {
-    const raw = readStore(SYNC_CFG_KEY);
-    if (raw) syncCfg = Object.assign({}, SYNC_DEFAULTS, JSON.parse(raw));
-  } catch { syncCfg = Object.assign({}, SYNC_DEFAULTS); }
-  try { syncCfg.pass = sessionStorage.getItem('openpgp_sync_pass') || ''; } catch {}
-}
-function syncSaveCfg(){
-  const { pass, ...rest } = syncCfg;
-  writeStore(SYNC_CFG_KEY, JSON.stringify(Object.assign({}, SYNC_DEFAULTS, rest)));
-  try { sessionStorage.setItem('openpgp_sync_pass', syncCfg.pass); } catch {}
-}
-function syncRenderKeySelect(){
-  const el = $('syncKey');
-  if (!el) return;
-  el.innerHTML = '';
-  const o = document.createElement('option');
-  o.value = '';
-  o.textContent = '— 选择本机密钥 —';
-  el.appendChild(o);
-  keys.filter(k => k.hasPrivate).forEach(k => {
-    const op = document.createElement('option');
-    op.value = k.fingerprint;
-    op.textContent = userIDLabel(k);
-    el.appendChild(op);
-  });
-  el.value = syncCfg.encryptFp;
-}
-function syncReadForm(){
-  syncCfg.url = $('syncUrl').value.trim();
-  syncCfg.user = $('syncUser').value.trim();
-  syncCfg.pass = $('syncPass').value;
-  syncCfg.fileName = ($('syncFileName').value.trim() || SYNC_DEFAULTS.fileName).replace(/\.asc$/i, '');
-  syncCfg.encryptFp = $('syncKey').value;
-}
-function syncFillForm(){
-  $('syncUrl').value = syncCfg.url;
-  $('syncUser').value = syncCfg.user;
-  $('syncPass').value = syncCfg.pass;
-  $('syncFileName').value = syncCfg.fileName;
-  syncRenderKeySelect();
-}
-function syncAuth(){
-  return 'Basic ' + btoa(unescape(encodeURIComponent(syncCfg.user + ':' + syncCfg.pass)));
-}
-function syncFileUrl(){
-  return syncCfg.url.replace(/\/?$/, '/') + syncCfg.fileName + '.asc';
-}
-function syncShowStatus(msg, cls){
-  const s = $('syncStatus');
-  s.textContent = msg;
-  s.className = 'status-banner ' + (cls || 'info');
-  s.classList.remove('hidden');
-}
-function isCorsErr(e){
-  return e instanceof TypeError && /failed to fetch/i.test(String(e.message));
-}
-function syncValidateCfg(){
-  if (!syncCfg.url || !/^https?:\/\//i.test(syncCfg.url)) throw new Error('请输入 WebDAV 目录 URL（含 https://）');
-  if (!syncCfg.encryptFp) throw new Error('请选择加密 / 解密密钥');
-}
-
-async function syncTest(){
-  syncReadForm(); syncSaveCfg();
-  try {
-    const resp = await fetch(syncFileUrl(), { method: 'HEAD', headers: { Authorization: syncAuth() } });
-    if (resp.status === 401 || resp.status === 403) syncShowStatus('账号或密码错误（HTTP ' + resp.status + '）。', 'error');
-    else syncShowStatus('连接成功（HTTP ' + resp.status + '）' + (resp.status === 404 ? '，远程文件尚不存在。' : '。'), 'ok');
-  } catch (e) {
-    syncShowStatus('无法连接：网络问题或服务端未开启 CORS（需返回 Access-Control-Allow-Origin 并响应预检）。', 'error');
-  }
-}
-
-async function syncPush(){
-  syncReadForm(); syncSaveCfg();
-  let rec;
-  try { syncValidateCfg(); rec = getRec(syncCfg.encryptFp); if (!rec) throw new Error('找不到所选密钥'); }
-  catch (e) { syncShowStatus(e.message, 'error'); return; }
-  $('btnSyncPush').disabled = true;
-  try {
-    const payload = { version: 1, type: 'purrogram-backup', exportedAt: new Date().toISOString(), keys, entries: pwEntries };
-    const message = await openpgp.createMessage({ text: JSON.stringify(payload) });
-    const opts = { message, encryptionKeys: [await openpgp.readKey({ armoredKey: rec.publicArmored })], format: 'armored' };
-    try { opts.signingKeys = [await getDecryptedPrivate(rec.fingerprint)]; } catch {}
-    const armored = await openpgp.encrypt(opts);
-    const resp = await fetch(syncFileUrl(), {
-      method: 'PUT',
-      headers: { Authorization: syncAuth(), 'Content-Type': 'application/pgp-encrypted' },
-      body: armored
-    });
-    if (!resp.ok) { syncShowStatus('上传失败：HTTP ' + resp.status, 'error'); return; }
-    syncShowStatus('已加密上传：' + keys.length + ' 条密钥 / ' + pwEntries.length + ' 条密码。', 'ok');
-  } catch (e) {
-    syncShowStatus('上传失败：' + friendlyError(e && e.message) + (isCorsErr(e) ? '（可能未开 CORS）' : ''), 'error');
-  } finally { $('btnSyncPush').disabled = false; }
-}
-
-async function syncPull(){
-  syncReadForm(); syncSaveCfg();
-  let rec;
-  try { syncValidateCfg(); rec = getRec(syncCfg.encryptFp); if (!rec) throw new Error('找不到所选密钥'); }
-  catch (e) { syncShowStatus(e.message, 'error'); return; }
-  $('btnSyncPull').disabled = true;
-  try {
-    const resp = await fetch(syncFileUrl(), { method: 'GET', headers: { Authorization: syncAuth() } });
-    if (resp.status === 404) { syncShowStatus('远程文件不存在，请先在其它设备推送一次。', 'error'); return; }
-    if (resp.status === 401 || resp.status === 403) { syncShowStatus('账号或密码错误（HTTP ' + resp.status + '）。', 'error'); return; }
-    if (!resp.ok) { syncShowStatus('下载失败：HTTP ' + resp.status, 'error'); return; }
-    const armored = await resp.text();
-    const priv = await getDecryptedPrivate(rec.fingerprint);
-    const msg = await openpgp.readMessage({ armoredMessage: armored });
-    const dec = await openpgp.decrypt({ message: msg, decryptionKeys: [priv] });
-    const payload = JSON.parse(dec.data);
-    if (!payload || payload.type !== 'purrogram-backup' || !Array.isArray(payload.keys) || !Array.isArray(payload.entries)) {
-      throw new Error('远程文件不是有效的 Purrogram 备份');
-    }
-    const ok = await confirmDialog(
-      '将用远程备份覆盖本地：本地现有 ' + keys.length + ' 条密钥、' + pwEntries.length + ' 条密码；远程包含 ' +
-      payload.keys.length + ' 条密钥、' + payload.entries.length + ' 条密码。覆盖后本地数据不可恢复，是否继续？', '覆盖');
-    if (!ok) { syncShowStatus('已取消。', 'info'); return; }
-    keys = payload.keys;
-    pwEntries = payload.entries;
-    saveKeys(); renderKeys(); syncRenderKeySelect();
-    pwSaveEntries(); renderPwList();
-    syncShowStatus('同步完成：' + keys.length + ' 条密钥 / ' + pwEntries.length + ' 条密码。', 'ok');
-  } catch (e) {
-    syncShowStatus('拉取失败：' + friendlyError(e && e.message) + (isCorsErr(e) ? '（可能未开 CORS）' : ''), 'error');
-  } finally { $('btnSyncPull').disabled = false; }
-}
-
 /* ══════════ 初始化 ══════════ */
 
 function init(){
@@ -3267,10 +3074,8 @@ function init(){
   $('cExpiry').value = fmtDate(d);
   pwLoadEntries();
   pwLoadIconCache();
-  syncLoadCfg();
   wireEvents();
   renderKeys();
-  syncFillForm();
   wirePasswordEvents();
   wirePwlibEvents();
   setTimeout(pwGenerate, 50);
