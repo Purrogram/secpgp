@@ -1,49 +1,67 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080D1A">
 <title>密码学小工具</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235D6D5D'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338BDF8'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E">
 <style>
-  :root {
-    --primary: #5D6D5D;
-    --primary-hover: #4D5D4D;
-    --bg: #FAF8F5;
-    --card-bg: #FFFFFF;
-    --text: #1C1C1C;
-    --text-secondary: #6B6B6B;
-    --text-tertiary: #9A9A9A;
-    --border: #E0DDD7;
-    --error: #C44E4E;
-    --error-bg: #FDF2F2;
-    --success: #5D8C5D;
-    --success-bg: #F0F7F0;
-    --warn: #B8860B;
-    --warn-bg: #FBF6EA;
-    --radius: 8px;
-    --shadow: 0 1px 6px rgba(0,0,0,0.06);
-    --shadow-hover: 0 2px 12px rgba(0,0,0,0.08);
-    --focus-ring: 0 0 0 2px rgba(93,109,93,0.25);
+:root {
+    color-scheme: dark;
+    --accent: #38BDF8;
+    --accent-soft: #7DD3FC;
+    --accent-2: #7C6CF6;
+    --bg: #080D1A;
+    --glass-border: rgba(168, 196, 255, 0.14);
+    --glass-hi: rgba(255, 255, 255, 0.20);
+    --text: #EAF0FA;
+    --text-secondary: #9CA9C2;
+    --text-tertiary: #5F6C86;
+    --error: #F87171;
+    --error-bg: rgba(248, 113, 113, 0.12);
+    --success: #34D399;
+    --success-bg: rgba(52, 211, 153, 0.12);
+    --warn: #FBBF24;
+    --warn-bg: rgba(251, 191, 36, 0.12);
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow-glass: 0 12px 40px rgba(2, 6, 18, 0.5), inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+    --shadow-pop: 0 24px 70px rgba(2, 6, 18, 0.65);
+    --focus-ring: 0 0 0 2px rgba(56, 189, 248, 0.4), 0 0 16px rgba(56, 189, 248, 0.28);
     --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-panel: linear-gradient(150deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03) 50%, rgba(140, 180, 255, 0.06));
+    --glass-inset: rgba(255, 255, 255, 0.045);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html {
+    background: #080D1A fixed;
+    background-image: radial-gradient(1300px 800px at 50% -8%, #12203D 0%, rgba(18, 32, 61, 0) 55%),
+                      radial-gradient(1000px 700px at 85% 110%, #0E1B33 0%, rgba(14, 27, 51, 0) 60%);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    /* 预留滚动条空间（无溢出时不显示滚动条，出现时也不会引起页面水平位移）。
+       注意：不要用 ::-webkit-scrollbar 自定义滚动条，否则 Chromium 会忽略 scrollbar-gutter。 */
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 169, 194, 0.35) transparent;
+  }
 
   body {
-    background: var(--bg);
+    background: transparent;
     color: var(--text);
     font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
     font-size: 15px;
     line-height: 1.6;
     min-height: 100vh;
     padding: 40px 16px 60px;
+    /* --sb-w 由 JS 动态补偿滚动条宽度，保证居中内容在滚动条出现/消失时不位移 */
+    padding-left: calc(16px + var(--sb-w, 0px));
     opacity: 0;
     animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
@@ -52,6 +70,16 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* ── 极光背景 ── */
+  .aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .aurora .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5; will-change: transform; }
+  .aurora .orb-a { width: 48vw; height: 48vw; left: -14vw; top: -16vw; background: radial-gradient(circle at 35% 35%, rgba(56, 189, 248, 0.5), transparent 65%); animation: drift-a 46s ease-in-out infinite alternate; }
+  .aurora .orb-b { width: 42vw; height: 42vw; right: -12vw; top: 20vh; background: radial-gradient(circle at 60% 40%, rgba(124, 108, 246, 0.42), transparent 65%); animation: drift-b 56s ease-in-out infinite alternate; }
+  .aurora .orb-c { width: 38vw; height: 38vw; left: 22vw; bottom: -18vw; background: radial-gradient(circle at 50% 50%, rgba(45, 212, 191, 0.26), transparent 65%); animation: drift-c 64s ease-in-out infinite alternate; }
+  @keyframes drift-a { to { transform: translate(10vw, 8vh) scale(1.1); } }
+  @keyframes drift-b { to { transform: translate(-9vw, -7vh) scale(0.92); } }
+  @keyframes drift-c { to { transform: translate(-7vw, -10vh) scale(1.06); } }
 
   .container { width: 100%; max-width: 720px; margin: 0 auto; }
 
@@ -62,16 +90,14 @@
     animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
   }
   .page-header h1 {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: 0.02em;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: linear-gradient(105deg, #FFFFFF 25%, var(--accent-soft) 60%, var(--accent-2) 95%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.35));
   }
-  .page-header .subtitle {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
+  .page-header .subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 6px; letter-spacing: 0.02em; }
 
   @keyframes slideDown {
     from { opacity: 0; transform: translateY(-12px); }
@@ -81,39 +107,36 @@
   /* ── Tabs ── */
   .tabs {
     display: flex;
-    gap: 4px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 4px;
+    gap: 6px;
+    background: var(--glass-inset);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 6px;
     margin-bottom: 20px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
     animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
-    transition: box-shadow var(--transition-base);
   }
-  .tabs:hover { box-shadow: var(--shadow-hover); }
   .tab {
     flex: 1;
-    padding: 9px 0;
+    padding: 10px 0;
     border: none;
-    border-radius: 6px;
+    border-radius: 13px;
     background: transparent;
     color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
-    transition: background var(--transition-base), color var(--transition-base), transform var(--transition-fast);
+    transition: background var(--transition-base), color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
     -webkit-user-select: none; user-select: none;
   }
-  .tab:hover {
-    color: var(--text);
-    transform: translateY(-1px);
-  }
+  .tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
   .tab.active {
-    background: var(--primary);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(93,109,93,0.25);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.24), rgba(56, 189, 248, 0.10));
+    color: #EAF6FF;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(56, 189, 248, 0.35), 0 0 18px rgba(56, 189, 248, 0.22);
   }
   .tab:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .tab:active { transform: scale(0.97); }
@@ -128,29 +151,33 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── Card ── */
-  .card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
+  /* ── 玻璃面板 ── */
+  .card, .key-card, .imp-preview {
+    background: var(--glass-panel);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius);
-    padding: 22px 22px 20px;
-    box-shadow: var(--shadow);
-    margin-bottom: 16px;
-    transition: box-shadow var(--transition-base), transform var(--transition-base);
+    box-shadow: var(--shadow-glass);
+    transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
   }
-  .card:hover {
-    box-shadow: var(--shadow-hover);
+  .card {
+    padding: 22px 22px 20px;
+    margin-bottom: 16px;
+  }
+  .card:hover, .key-card:hover {
+    box-shadow: var(--shadow-glass), 0 0 0 1px rgba(56, 189, 248, 0.12);
     transform: translateY(-1px);
   }
   .section-title {
     font-size: 11px;
     font-weight: 600;
-    color: var(--text-tertiary);
+    color: var(--accent-soft);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     margin-bottom: 12px;
+    opacity: 0.85;
   }
-  .field-name-input { width: 220px; margin-bottom: 10px; }
 
   /* ── Buttons ── */
   .btn {
@@ -159,60 +186,66 @@
     justify-content: center;
     gap: 6px;
     padding: 9px 18px;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    background: var(--primary);
-    color: #fff;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.24), rgba(56, 189, 248, 0.10));
+    color: #EAF6FF;
     font-size: 14px;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
-    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-fast), box-shadow var(--transition-base), opacity var(--transition-base);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 18px rgba(56, 189, 248, 0.22);
+    transition: box-shadow var(--transition-base), transform var(--transition-fast), background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
     -webkit-user-select: none; user-select: none;
   }
   .btn:hover {
-    background: var(--primary-hover);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.32), rgba(56, 189, 248, 0.16));
+    border-color: rgba(56, 189, 248, 0.5);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(93,109,93,0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 0 24px rgba(56, 189, 248, 0.35);
   }
   .btn:active { transform: scale(0.97); }
   .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
   .btn-ghost {
-    background: var(--card-bg);
-    color: var(--primary);
-    border-color: var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-hi);
   }
   .btn-ghost:hover {
-    background: #F5F8F5;
-    border-color: var(--primary);
-    box-shadow: 0 2px 8px rgba(93,109,93,0.12);
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #EAF6FF;
+    box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 14px rgba(56, 189, 248, 0.15);
   }
-  .btn-mini { padding: 4px 10px; font-size: 12.5px; border-radius: 5px; }
+  .btn-mini { padding: 4px 10px; font-size: 12.5px; border-radius: 8px; }
   .btn-danger {
-    background: var(--error);
-    color: #fff;
-    border-color: transparent;
+    border-color: rgba(248, 113, 113, 0.35);
+    background: linear-gradient(180deg, rgba(248, 113, 113, 0.24), rgba(248, 113, 113, 0.10));
+    color: #FECACA;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 16px rgba(248, 113, 113, 0.18);
   }
   .btn-danger:hover {
-    background: #B23E3E;
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(196,78,78,0.25);
+    background: linear-gradient(180deg, rgba(248, 113, 113, 0.32), rgba(248, 113, 113, 0.16));
+    border-color: rgba(248, 113, 113, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 22px rgba(248, 113, 113, 0.3);
   }
   .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 28px; height: 28px; flex-shrink: 0;
-    border: 1px solid var(--border); border-radius: 6px;
-    background: var(--card-bg); cursor: pointer;
+    border: 1px solid var(--glass-border); border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05); cursor: pointer;
     color: var(--text-secondary);
-    transition: border-color var(--transition-base), color var(--transition-base), background var(--transition-base), transform var(--transition-fast);
+    box-shadow: inset 0 1px 0 var(--glass-hi);
+    transition: border-color var(--transition-base), color var(--transition-base), background var(--transition-base), transform var(--transition-fast), box-shadow var(--transition-base);
   }
   .icon-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: #F5F8F5;
+    border-color: rgba(56, 189, 248, 0.5);
+    color: var(--accent-soft);
+    background: rgba(56, 189, 248, 0.1);
     transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 12px rgba(56, 189, 248, 0.2);
   }
   .icon-btn:active { transform: scale(0.95); }
   .icon-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -235,12 +268,12 @@
     width: 28px; height: 28px; flex-shrink: 0;
     border: none; background: none; cursor: pointer;
     color: var(--text-tertiary);
-    border-radius: 6px;
+    border-radius: 8px;
     transition: color var(--transition-base), background var(--transition-base), transform var(--transition-fast);
   }
   .pw-field .pw-toggle:hover {
-    color: var(--primary);
-    background: var(--bg);
+    color: var(--accent-soft);
+    background: rgba(56, 189, 248, 0.1);
     transform: translateY(-50%) scale(1.05);
   }
   .pw-field .pw-toggle:active { transform: translateY(-50%) scale(0.95); }
@@ -250,37 +283,47 @@
   select, textarea {
     width: 100%;
     padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
     font-size: 14px;
     font-family: inherit;
     color: var(--text);
-    background: var(--bg);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
     transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
   }
+  input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
   input:hover, select:hover, textarea:hover {
-    border-color: #C0BDB7;
+    border-color: rgba(168, 196, 255, 0.28);
   }
   input:focus-visible, select:focus-visible, textarea:focus-visible {
     outline: none;
-    border-color: var(--primary);
+    border-color: rgba(56, 189, 248, 0.65);
     box-shadow: var(--focus-ring);
-    background: var(--card-bg);
+    background: rgba(56, 189, 248, 0.06);
   }
   input:disabled { opacity: .45; cursor: not-allowed; }
+  select {
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239CA9C2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
   textarea { resize: vertical; line-height: 1.55; }
   .mono { font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", "PingFang SC", monospace; }
 
   .check-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none; }
-  .check-inline input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+  .check-inline input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
   .form-error {
     display: none;
     font-size: 13px;
-    color: var(--error);
+    color: #FCA5A5;
     background: var(--error-bg);
+    border: 1px solid rgba(248, 113, 113, 0.3);
     padding: 8px 12px;
-    border-radius: 6px;
+    border-radius: 10px;
     margin-bottom: 14px;
     line-height: 1.5;
     animation: errorSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -296,13 +339,15 @@
   .field-row .field { flex: 1; }
 
   /* ── Toolbar / empty state ── */
-  .toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px; }
+  .toolbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; }
   .empty-state {
     text-align: center;
     padding: 64px 20px 56px;
-    border: 1px dashed var(--border);
+    border: 1px dashed rgba(168, 196, 255, 0.25);
     border-radius: var(--radius);
-    background: var(--card-bg);
+    background: rgba(255, 255, 255, 0.03);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
   }
   .empty-title { font-size: 18px; font-weight: 600; color: var(--text-secondary); margin-bottom: 18px; }
   .empty-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -311,18 +356,8 @@
   /* ── Key list ── */
   .keys-list { display: flex; flex-direction: column; gap: 12px; }
   .key-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     padding: 14px 16px;
-    box-shadow: var(--shadow);
-    transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
     animation: cardSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-  .key-card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
-    border-color: var(--primary);
   }
   .key-card:nth-child(1) { animation-delay: 0.05s; }
   .key-card:nth-child(2) { animation-delay: 0.1s; }
@@ -336,55 +371,62 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  .key-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-  .key-name { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .key-top { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .key-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .key-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; }
   .key-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .key-actions .btn-mini { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-secondary); }
-  .key-actions .btn-mini:hover { border-color: var(--primary); color: var(--primary); background: #F5F8F5; }
+  .key-actions .btn-mini { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-secondary); box-shadow: inset 0 1px 0 var(--glass-hi); }
+  .key-actions .btn-mini:hover { border-color: rgba(56, 189, 248, 0.5); color: var(--accent-soft); background: rgba(56, 189, 248, 0.1); box-shadow: inset 0 1px 0 var(--glass-hi); }
+  .key-actions .btn-mini.btn-danger { border-color: rgba(248, 113, 113, 0.3); color: #FCA5A5; background: linear-gradient(180deg, rgba(248, 113, 113, 0.2), rgba(248, 113, 113, 0.08)); }
+  .key-actions .btn-mini.btn-danger:hover { border-color: rgba(248, 113, 113, 0.5); color: #FECACA; background: linear-gradient(180deg, rgba(248, 113, 113, 0.28), rgba(248, 113, 113, 0.12)); }
 
   /* ── Badge ── */
   .badge {
     display: inline-block;
+    flex-shrink: 0;
     padding: 2px 9px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 500;
     white-space: nowrap;
+    border: 1px solid transparent;
     transition: transform var(--transition-fast);
   }
   .badge:hover { transform: scale(1.05); }
-  .badge-valid { background: var(--success-bg); color: var(--success); }
-  .badge-expired { background: var(--warn-bg); color: var(--warn); }
-  .badge-revoked { background: var(--error-bg); color: var(--error); }
-  .badge-neutral { background: var(--bg); color: var(--text-secondary); }
+  .badge-valid { background: var(--success-bg); color: #6EE7B7; border-color: rgba(52, 211, 153, 0.3); }
+  .badge-expired { background: var(--warn-bg); color: #FCD34D; border-color: rgba(251, 191, 36, 0.3); }
+  .badge-revoked { background: var(--error-bg); color: #FCA5A5; border-color: rgba(248, 113, 113, 0.3); }
+  .badge-neutral { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border-color: var(--glass-border); }
 
   /* ── Modal ── */
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(28,28,28,0.4);
+    background: rgba(4, 8, 18, 0.6);
     display: none;
     align-items: flex-start;
     justify-content: center;
     padding: 48px 16px;
     overflow-y: auto;
     z-index: 100;
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
   .modal-overlay.open {
     display: flex;
     animation: overlayFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes overlayFadeIn {
-    from { opacity: 0; backdrop-filter: blur(0); }
-    to { opacity: 1; backdrop-filter: blur(2px); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   .modal {
-    background: var(--card-bg);
-    border-radius: 10px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.16);
+    background: linear-gradient(160deg, rgba(24, 36, 64, 0.92), rgba(11, 17, 33, 0.94));
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop), inset 0 1px 0 var(--glass-hi);
     width: 100%;
     max-width: 520px;
     padding: 22px 24px 20px;
@@ -398,34 +440,34 @@
   .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
   .modal-header h2 { font-size: 17px; font-weight: 600; }
   .modal-close {
-    border: none; background: none; cursor: pointer;
-    width: 28px; height: 28px; border-radius: 6px;
+    border: none; background: rgba(255, 255, 255, 0.05); cursor: pointer;
+    width: 28px; height: 28px; border-radius: 8px;
     font-size: 16px; color: var(--text-tertiary); line-height: 1;
     transition: background var(--transition-base), color var(--transition-base), transform var(--transition-fast);
   }
   .modal-close:hover {
-    background: var(--bg);
-    color: var(--text);
+    background: rgba(248, 113, 113, 0.15);
+    color: #FCA5A5;
     transform: rotate(90deg);
   }
   .modal-close:active { transform: rotate(90deg) scale(0.9); }
+  .modal-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
-  .modal-footer #btnAddField { margin-right: auto; }
   .modal-note { font-size: 12px; color: var(--text-tertiary); margin-top: 12px; line-height: 1.6; }
 
   /* ── Detail view ── */
   .det-section { margin-bottom: 16px; }
   .det-section:last-child { margin-bottom: 0; }
-  .det-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .det-label { font-size: 11px; font-weight: 600; color: var(--accent-soft); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px; opacity: 0.85; }
   .det-value { font-size: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .fp-full { word-break: break-all; font-size: 13px; }
   .det-edit { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .det-edit input[type="date"] { width: auto; padding: 5px 10px; font-size: 13px; }
-  .priv-box { width: 100%; min-height: 120px; margin-top: 8px; font-size: 11.5px; background: var(--bg); }
+  .priv-box { width: 100%; min-height: 120px; margin-top: 8px; font-size: 11.5px; background: rgba(255, 255, 255, 0.04); }
   .muted { color: var(--text-tertiary); font-size: 13px; }
   .det-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .det-table th { text-align: left; font-weight: 600; color: var(--text-secondary); padding: 5px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  .det-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .det-table th { text-align: left; font-weight: 600; color: var(--text-secondary); padding: 5px 8px; border-bottom: 1px solid var(--glass-border); white-space: nowrap; }
+  .det-table td { padding: 7px 8px; border-bottom: 1px solid rgba(168, 196, 255, 0.08); vertical-align: top; line-height: 1.5; }
   .det-table tr:last-child td { border-bottom: none; }
   .det-table .fp-cell { font-size: 11px; word-break: break-all; max-width: 190px; }
   .det-table .badge { font-size: 11px; padding: 1px 7px; }
@@ -433,9 +475,9 @@
   /* ── Import ── */
   .imp-tabs {
     display: flex; gap: 4px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
     padding: 4px;
     margin-bottom: 16px;
   }
@@ -443,38 +485,38 @@
     flex: 1;
     padding: 8px 0;
     border: none;
-    border-radius: 6px;
+    border-radius: 9px;
     background: transparent;
     color: var(--text-secondary);
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
-    transition: background var(--transition), color var(--transition);
+    transition: background var(--transition), color var(--transition), box-shadow var(--transition);
   }
   .imp-tab:hover { color: var(--text); }
-  .imp-tab.active { background: var(--primary); color: #fff; font-weight: 500; }
+  .imp-tab.active { background: linear-gradient(180deg, rgba(56, 189, 248, 0.24), rgba(56, 189, 248, 0.1)); color: #EAF6FF; font-weight: 500; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
   .imp-tab:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .file-pick {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 16px;
-    border: 1px solid var(--border); border-radius: 6px;
-    background: var(--card-bg); color: var(--text-secondary);
+    border: 1px solid var(--glass-border); border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05); color: var(--text-secondary);
     font-size: 13.5px; font-family: inherit;
     cursor: pointer;
-    transition: border-color var(--transition), color var(--transition), background var(--transition);
+    box-shadow: inset 0 1px 0 var(--glass-hi);
+    transition: border-color var(--transition), color var(--transition), background var(--transition), box-shadow var(--transition);
   }
-  .file-pick:hover { border-color: var(--primary); color: var(--primary); background: #F5F8F5; }
+  .file-pick:hover { border-color: rgba(56, 189, 248, 0.5); color: var(--accent-soft); background: rgba(56, 189, 248, 0.1); box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 12px rgba(56, 189, 248, 0.18); }
   .file-pick:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .file-pick svg { width: 15px; height: 15px; }
-  #impFileName { font-size: 13px; color: var(--text-tertiary); margin-top: 8px; word-break: break-all; }
-  .imp-file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .imp-file-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
   .imp-preview {
     margin-top: 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
     padding: 12px 14px;
     font-size: 13px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.04);
   }
   .imp-line { display: flex; gap: 12px; margin-bottom: 5px; }
   .imp-line:last-child { margin-bottom: 0; }
@@ -489,27 +531,24 @@
   .np-row .np-field { flex: 1; min-width: 0; }
   .np-row .np-field { display: flex; align-items: center; gap: 8px; }
   .np-row .np-field input[type="password"] { flex: 1; min-width: 0; }
-  .np-check-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13.5px; color: var(--text-secondary); }
-  .np-check-row .np-check-label { flex-shrink: 0; width: 96px; }
-  .np-check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
-  .np-check-row .np-pw { flex: 1; min-width: 0; }
   .np-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
   .np-other-wrap { margin: -4px 0 12px 110px; }
   .np-other-wrap textarea { min-height: 90px; font-size: 12px; }
   .status-banner {
     padding: 10px 14px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 13px;
     margin-bottom: 12px;
     line-height: 1.55;
     word-break: break-word;
+    border: 1px solid transparent;
   }
-  .status-banner.ok { background: var(--success-bg); color: var(--success); }
-  .status-banner.error { background: var(--error-bg); color: var(--error); }
-  .status-banner.info { background: var(--bg); color: var(--text-secondary); }
+  .status-banner.ok { background: var(--success-bg); color: #6EE7B7; border-color: rgba(52, 211, 153, 0.3); }
+  .status-banner.error { background: var(--error-bg); color: #FCA5A5; border-color: rgba(248, 113, 113, 0.3); }
+  .status-banner.info { background: rgba(56, 189, 248, 0.08); color: var(--text-secondary); border-color: rgba(56, 189, 248, 0.25); }
   .np-result-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .np-result-actions { display: flex; gap: 6px; }
-  #npOutput { min-height: 120px; font-size: 12px; background: var(--bg); }
+  #npOutput { min-height: 120px; font-size: 12px; background: rgba(255, 255, 255, 0.04); }
 
   /* ── Toast ── */
   .toast {
@@ -517,12 +556,15 @@
     left: 50%;
     bottom: 32px;
     transform: translateX(-50%) translateY(12px);
-    background: var(--text);
-    color: #fff;
+    background: rgba(15, 23, 42, 0.85);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 30px rgba(2, 6, 18, 0.6), inset 0 1px 0 var(--glass-hi);
+    color: var(--text);
     font-size: 13px;
     padding: 9px 18px;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    border-radius: 999px;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--transition-base), transform var(--transition-bounce);
@@ -540,7 +582,7 @@
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: var(--border);
+    background: rgba(255, 255, 255, 0.14);
     border-radius: 2px;
     outline: none;
     cursor: pointer;
@@ -549,14 +591,14 @@
     -webkit-appearance: none;
     width: 18px; height: 18px;
     border-radius: 50%;
-    background: var(--primary);
+    background: linear-gradient(180deg, #7DD3FC, #38BDF8);
     cursor: pointer;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.14);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 1px 4px rgba(0, 0, 0, 0.4);
     transition: box-shadow var(--transition-base), transform var(--transition-fast);
   }
   .length-row input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 2px 8px rgba(93,109,93,0.3);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.9), 0 1px 4px rgba(0, 0, 0, 0.4);
     transform: scale(1.15);
   }
   .length-row input[type="range"]::-webkit-slider-thumb:active {
@@ -565,23 +607,26 @@
   .length-row input[type="range"]::-moz-range-thumb {
     width: 18px; height: 18px;
     border-radius: 50%;
-    background: var(--primary);
+    background: linear-gradient(180deg, #7DD3FC, #38BDF8);
     cursor: pointer;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.14);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 1px 4px rgba(0, 0, 0, 0.4);
     transition: box-shadow var(--transition-base), transform var(--transition-fast);
   }
   .length-row input[type="range"]::-moz-range-thumb:hover {
-    box-shadow: 0 2px 8px rgba(93,109,93,0.3);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.9), 0 1px 4px rgba(0, 0, 0, 0.4);
     transform: scale(1.15);
   }
-  .length-row input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(93,109,93,0.3); }
+  .length-row input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4); }
+  .length-row input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4); }
   .length-display {
-    font-size: 20px; font-weight: 600;
-    color: var(--primary);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent-soft);
     min-width: 36px;
     text-align: center;
     font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
   }
   .char-row {
     display: flex;
@@ -589,7 +634,7 @@
     gap: 10px;
     padding: 6px 0;
     min-height: 38px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(168, 196, 255, 0.08);
   }
   .char-row:last-of-type { border-bottom: none; }
   .char-row label.check-label {
@@ -599,7 +644,7 @@
   }
   .char-row input[type="checkbox"] {
     width: 18px; height: 18px;
-    accent-color: var(--primary);
+    accent-color: var(--accent);
     cursor: pointer; flex-shrink: 0;
   }
   .char-label-text { font-size: 14px; line-height: 1.3; }
@@ -609,16 +654,17 @@
   .min-group input[type="number"] {
     width: 42px;
     padding: 3px 2px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
     font-size: 13px;
     font-family: inherit;
     text-align: center;
     color: var(--text);
-    background: var(--bg);
+    background: rgba(255, 255, 255, 0.05);
     -moz-appearance: textfield;
-    transition: border-color var(--transition), opacity var(--transition);
+    transition: border-color var(--transition), opacity var(--transition), box-shadow var(--transition);
   }
+  .min-group input[type="number"]:focus-visible { outline: none; border-color: rgba(56, 189, 248, 0.65); box-shadow: var(--focus-ring); }
   .min-group input[type="number"]:disabled { opacity: 0.35; cursor: not-allowed; }
   .min-group input[type="number"]::-webkit-outer-spin-button,
   .min-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -630,29 +676,30 @@
   .toggle input:focus-visible + .track { box-shadow: var(--focus-ring); }
   .toggle .track {
     position: absolute; inset: 0;
-    background: #D0D0D0;
+    background: rgba(255, 255, 255, 0.14);
     border-radius: 11px;
-    transition: background var(--transition);
+    transition: background var(--transition), box-shadow var(--transition);
   }
   .toggle .track::after {
     content: '';
     position: absolute;
     top: 2px; left: 2px;
     width: 18px; height: 18px;
-    background: #fff;
+    background: #EAF0FA;
     border-radius: 50%;
     transition: transform var(--transition);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
-  .toggle input:checked + .track { background: var(--primary); }
+  .toggle input:checked + .track { background: linear-gradient(90deg, #38BDF8, #2B6FE8); box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
   .toggle input:checked + .track::after { transform: translateX(16px); }
   .pw-error {
     display: none;
     font-size: 13px;
-    color: var(--error);
+    color: #FCA5A5;
     background: var(--error-bg);
+    border: 1px solid rgba(248, 113, 113, 0.3);
     padding: 8px 12px;
-    border-radius: 6px;
+    border-radius: 10px;
     margin-bottom: 12px;
     line-height: 1.5;
   }
@@ -663,35 +710,39 @@
     justify-content: center;
     gap: 8px;
     width: 100%;
-    padding: 11px 20px;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
+    padding: 12px 20px;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.24), rgba(56, 189, 248, 0.10));
+    color: #EAF6FF;
+    border-radius: 12px;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: background var(--transition), transform var(--transition);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 20px rgba(56, 189, 248, 0.25);
+    transition: box-shadow var(--transition), transform var(--transition), background var(--transition), border-color var(--transition);
     -webkit-user-select: none; user-select: none;
   }
-  .btn-generate:hover { background: var(--primary-hover); }
+  .btn-generate:hover { background: linear-gradient(180deg, rgba(56, 189, 248, 0.32), rgba(56, 189, 248, 0.16)); border-color: rgba(56, 189, 248, 0.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 0 28px rgba(56, 189, 248, 0.4); }
   .btn-generate:active { transform: scale(0.98); }
+  .btn-generate:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .btn-generate .icon { font-size: 16px; line-height: 1; }
-  .password-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .password-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(168, 196, 255, 0.1); }
   .password-section.hidden { display: none; }
   .password-display { display: flex; align-items: center; gap: 8px; }
   .password-display .pw-text {
     flex: 1;
     padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
     font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", "PingFang SC", monospace;
     font-size: 16px;
     font-weight: 500;
     letter-spacing: 0.06em;
-    color: var(--text);
-    background: var(--bg);
+    color: var(--accent-soft);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -703,27 +754,30 @@
     align-items: center;
     justify-content: center;
     width: 42px; height: 42px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
     flex-shrink: 0;
-    transition: border-color var(--transition), background var(--transition);
+    box-shadow: inset 0 1px 0 var(--glass-hi);
+    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
     position: relative;
   }
-  .btn-copy:hover { border-color: var(--primary); background: #F5F8F5; }
+  .btn-copy:hover { border-color: rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.1); box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 12px rgba(56, 189, 248, 0.2); }
+  .btn-copy:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .btn-copy svg { width: 18px; height: 18px; color: var(--text-secondary); }
-  .btn-copy:hover svg { color: var(--primary); }
+  .btn-copy:hover svg { color: var(--accent-soft); }
   .btn-copy .tooltip {
     position: absolute;
     bottom: calc(100% + 6px);
     left: 50%;
     transform: translateX(-50%) scale(0.9);
-    background: var(--text);
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid var(--glass-border);
     color: #fff;
     font-size: 12px;
     padding: 4px 10px;
-    border-radius: 4px;
+    border-radius: 6px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -732,139 +786,24 @@
   .btn-copy .tooltip.show { opacity: 1; transform: translateX(-50%) scale(1); }
   .strength-section { margin-top: 12px; }
   .strength-bar { display: flex; gap: 4px; margin-bottom: 4px; }
-  .strength-bar .segment { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.25s ease; }
-  .strength-bar .segment.active.weak    { background: #C44E4E; }
-  .strength-bar .segment.active.medium  { background: #D4A04A; }
-  .strength-bar .segment.active.strong  { background: #5D8C5D; }
-  .strength-bar .segment.active.extreme { background: #3D7A5D; }
+  .strength-bar .segment { flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); transition: background 0.25s ease, box-shadow 0.25s ease; }
+  .strength-bar .segment.active.weak    { background: #F87171; box-shadow: 0 0 8px rgba(248, 113, 113, 0.6); }
+  .strength-bar .segment.active.medium  { background: #FBBF24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.6); }
+  .strength-bar .segment.active.strong  { background: #38BDF8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }
+  .strength-bar .segment.active.extreme { background: #2DD4BF; box-shadow: 0 0 8px rgba(45, 212, 191, 0.6); }
   .strength-label { font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; }
   .strength-label .bits { color: var(--text-tertiary); font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", monospace; font-size: 11px; }
 
-  /* ── 密码库 ── */
-  .toolbar input[type="search"] {
-    flex: 1;
-    min-width: 0;
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--bg);
-    transition: border-color var(--transition), box-shadow var(--transition);
-  }
-  .toolbar input[type="search"]:focus-visible {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--focus-ring);
-  }
-  .pw-list { display: flex; flex-direction: column; gap: 10px; }
-  .pw-entry {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    box-shadow: var(--shadow);
-  }
-  .pw-favicon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    flex-shrink: 0;
-    overflow: hidden;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    user-select: none;
-    cursor: pointer;
-    transition: box-shadow var(--transition);
-  }
-  .pw-favicon:hover { box-shadow: var(--focus-ring); }
-  .pw-favicon img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
-  .pw-main { flex: 1; min-width: 0; }
-  .pw-domain { font-size: 14.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pw-account { font-size: 12.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pw-pass { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: "SF Mono", "Cascadia Code", "Consolas", "Menlo", monospace; font-size: 13px; color: var(--text-secondary); }
-  .pw-pass .pw-mask { letter-spacing: 0.15em; min-width: 8ch; }
-  .pw-actions { display: flex; gap: 2px; flex-shrink: 0; }
-  .pw-actions button {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; flex-shrink: 0;
-    border: none; border-radius: 6px;
-    background: none; cursor: pointer;
-    color: var(--text-tertiary);
-    transition: color var(--transition), background var(--transition);
-  }
-  .pw-actions button:hover { color: var(--primary); background: var(--bg); }
-  .pw-actions button.btn-danger:hover { color: var(--error); background: var(--error-bg); }
-  .pw-actions button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-  .pw-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-  /* ── 要素 ── */
-  .entry-field-row { margin-bottom: 14px; }
-  .entry-field-row .ef-name {
-    display: block;
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .entry-field-row .ef-wrap { position: relative; }
-  .entry-field-row .ef-wrap .ef-value {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    padding: 9px 40px 9px 12px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--text);
-    transition: border-color var(--transition), box-shadow var(--transition);
-  }
-  .entry-field-row .ef-wrap .ef-value:focus-visible {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--focus-ring);
-  }
-  .entry-field-row .ef-del {
-    position: absolute;
-    top: 50%;
-    right: 6px;
-    transform: translateY(-50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 5px;
-    background: none;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    transition: color var(--transition), background var(--transition);
-  }
-  .entry-field-row .ef-del:hover { color: var(--error); background: var(--error-bg); }
-  .entry-field-row .ef-del svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-  /* ── Footer ── */
+  /* ── Footer / misc ── */
   .page-footer { text-align: center; margin-top: 30px; font-size: 12px; color: var(--text-tertiary); line-height: 1.8; }
 
   .hidden { display: none !important; }
 
+  ::selection { background: rgba(56, 189, 248, 0.35); color: #fff; }
+
   /* ── Responsive ── */
   @media (max-width: 560px) {
-    body { padding: 24px 12px 40px; }
+    body { padding: 24px 12px 40px; padding-left: calc(12px + var(--sb-w, 0px)); }
     .card { padding: 16px 14px 16px; }
     .field-row { flex-direction: column; gap: 0; }
     .np-row { flex-wrap: wrap; }
@@ -872,12 +811,27 @@
     .np-row > select,
     .np-row .np-field { width: 100%; }
     .np-other-wrap { margin-left: 0; }
-    .key-top { flex-direction: column; align-items: flex-start; }
     .modal-overlay { padding: 24px 12px; }
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .aurora .orb { animation: none; }
   }
 </style>
 </head>
 <body>
+
+<div class="aurora" aria-hidden="true">
+  <span class="orb orb-a"></span>
+  <span class="orb orb-b"></span>
+  <span class="orb orb-c"></span>
+</div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
@@ -893,13 +847,13 @@
 
   <header class="page-header">
     <h1>密码学小工具</h1>
+    <p class="subtitle">PGP 密钥管理 · 加密与签名 · 密码生成</p>
   </header>
 
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="keys" role="tab">管理密钥</button>
     <button class="tab" data-tab="notepad" role="tab">记事本</button>
     <button class="tab" data-tab="password" role="tab">密码生成</button>
-    <button class="tab" data-tab="pwlib" role="tab">密码库</button>
   </div>
 
   <!-- ═══════ 管理密钥 ═══════ -->
@@ -1112,29 +1066,8 @@
     </div>
   </section>
 
-  <!-- ═══════ 密码库 ═══════ -->
-  <section id="tab-pwlib" class="tab-panel">
-    <div class="toolbar">
-      <input type="search" id="pwSearch" placeholder="搜索域名或账号…" aria-label="搜索密码库">
-      <button class="btn btn-ghost" id="btnImportEntries">导入</button>
-      <button class="btn btn-ghost" id="btnExportEntries">导出</button>
-      <button class="btn" id="btnAddEntry">新增</button>
-    </div>
-
-    <div id="pwEmpty" class="empty-state hidden">
-      <div class="empty-title">密码库为空</div>
-      <div class="empty-actions">
-        <button class="btn" id="btnAddFirst">新增密码</button>
-      </div>
-    </div>
-
-    <div id="pwList" class="pw-list hidden"></div>
-
-    <p class="storage-note">密码仅保存在本机浏览器（localStorage）中，不经过任何网络。</p>
-  </section>
-
   <footer class="page-footer">
-    密码学小工具 © Purrogram
+    密码学小工具 © Purrogram · 全部运算在本地完成
   </footer>
 </div>
 
@@ -1222,7 +1155,6 @@
           </svg>
           选择密钥文件
         </button>
-        <span id="impFileName" class="muted">未选择文件</span>
       </div>
       <div class="modal-note">支持 PGP 公钥 / 私钥文件（armored 文本或二进制，如 .asc、.gpg、.key）。</div>
     </div>
@@ -1286,73 +1218,6 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="confirmNo">取消</button>
       <button class="btn btn-danger" id="confirmYes">删除</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════ 密码库条目 ═══════ -->
-<div class="modal-overlay" id="modalEntry">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="entryTitle">新增密码</h2>
-      <button class="modal-close" data-close="modalEntry" aria-label="关闭">&times;</button>
-    </div>
-
-    <div class="form-error" id="entryErr"></div>
-
-    <div class="field-row">
-      <div class="field">
-        <label class="field-label" for="entryAccount">项目名称</label>
-        <input type="text" id="entryAccount" placeholder="输入项目名称" autocomplete="off">
-      </div>
-      <div class="field">
-        <label class="field-label" for="entryDomain">URL</label>
-        <input type="text" id="entryDomain" placeholder="输入账号网址" autocomplete="off">
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label class="field-label" for="entryUsername">用户名</label>
-        <input type="text" id="entryUsername" placeholder="用户名/手机号/邮箱" autocomplete="off">
-      </div>
-      <div class="field">
-        <div class="field-head">
-          <label class="field-label" for="entryPassword">密码</label>
-        </div>
-        <div class="pw-field">
-          <input type="password" id="entryPassword" placeholder="输入账号密码" autocomplete="new-password">
-          <button class="pw-toggle" type="button" data-pw-for="entryPassword" aria-label="显示密码"><svg><use href="#i-eye"/></svg></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="field">
-      <input type="text" class="field-name-input hidden" id="fieldNameInput" placeholder="输入要素名称，回车添加" autocomplete="off" aria-label="要素名称">
-      <div id="entryFields"></div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="btnAddField" type="button">添加要素</button>
-      <button class="btn btn-ghost" data-close="modalEntry">取消</button>
-      <button class="btn" id="btnSaveEntry">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════ 导入密码库 ═══════ -->
-<div class="modal-overlay" id="modalImportEntries">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>导入密码库</h2>
-      <button class="modal-close" data-close="modalImportEntries" aria-label="关闭">&times;</button>
-    </div>
-    <textarea id="importEntriesText" placeholder="粘贴密码库备份 JSON（从「导出」获得）" style="min-height:120px"></textarea>
-    <div id="importEntriesErr" class="form-error" style="margin-top:10px"></div>
-    <div class="modal-note">同域名同账号的记录将被更新（取更新时间较新的），其余新增。</div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" data-close="modalImportEntries">取消</button>
-      <button class="btn" id="btnDoImport">导入</button>
     </div>
   </div>
 </div>
@@ -1434,6 +1299,18 @@ function writeStore(key, val){
 }
 
 /* ══════════ 基础工具 ══════════ */
+
+// 滚动条占位补偿：
+// - 支持 scrollbar-gutter: stable 的环境已预留空间（无可见缺口、无位移），
+//   但预留量不反映在 clientWidth 中；
+// - 不支持的环境（如自定义滚动条下的 Chromium）滚动条会挤压布局宽度。
+// 两种情况下，「innerWidth - body.clientWidth」都等于滚动条实际挤占的
+// 布局宽度（gutter 预留时恒为预留值），补偿到 body 左内边距后，
+// 居中内容在滚动条出现/消失时始终相对视口居中、零位移。
+function syncScrollbarPad(){
+  const pad = Math.max(0, window.innerWidth - document.body.clientWidth);
+  document.documentElement.style.setProperty('--sb-w', pad + 'px');
+}
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pad(n){ return String(n).padStart(2,'0'); }
@@ -1619,7 +1496,6 @@ async function renderKeys(){
       '</div>' +
       '<div class="key-meta">' +
         '<span class="mono">密钥 ID：' + esc(fmtKeyID(rec.keyID) || '—') + '</span>' +
-        (rec.hasPassphrase ? '<span class="muted">私钥已加密</span>' : '') +
       '</div>' +
       '<div class="key-actions">' +
         '<button class="btn btn-mini" data-act="pub">导出公钥</button>' +
@@ -1734,7 +1610,6 @@ let pendingImport = null;
 function openImport(){
   pendingImport = null;
   $('impFile').value = '';
-  $('impFileName').textContent = '未选择文件';
   $('impClip').value = '';
   $('impPreview').classList.add('hidden');
   $('impErr').classList.remove('visible');
@@ -2530,600 +2405,6 @@ function wirePasswordEvents() {
   pwSyncMinState();
 }
 
-/* ══════════ 密码库 ══════════ */
-
-const PW_STORE_KEY = 'openpgp_pwlib_v1';
-const PW_ICON_KEY = 'pwlib_icon_cache_v1';
-
-let pwEntries = [];
-let pwIconCache = {};   // apex 域 -> 成功图标路径 | 'placeholder'
-let pwFilter = '';
-let pwVisible = {};     // entryId -> bool
-let pwHideTimers = {};
-let pwEditingId = null;
-
-const PW_ICON_PATHS = ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'];
-const PW_COLORS = ['#5D6D5D', '#8B7D5D', '#5D7D8B', '#7D5D8B', '#8B5D5D', '#5D8B7D', '#8B6D5D'];
-const pwSort = new Intl.Collator('zh-Hans-CN', { numeric: true });
-
-function pwLoadEntries(){
-  try {
-    const raw = readStore(PW_STORE_KEY);
-    pwEntries = raw ? (JSON.parse(raw).entries || []) : [];
-  } catch { pwEntries = []; }
-  pwEntries = pwEntries.filter(e => e && typeof e.id === 'string' && typeof e.domain === 'string' && typeof e.account === 'string' && typeof e.password === 'string');
-}
-function pwSaveEntries(){ writeStore(PW_STORE_KEY, JSON.stringify({ version: 1, entries: pwEntries })); }
-function pwLoadIconCache(){
-  try {
-    const raw = readStore(PW_ICON_KEY);
-    pwIconCache = raw ? (JSON.parse(raw) || {}) : {};
-  } catch { pwIconCache = {}; }
-}
-function pwSaveIconCache(){ writeStore(PW_ICON_KEY, JSON.stringify(pwIconCache)); }
-
-function normalizeDomain(input){
-  let s = String(input || '').trim().toLowerCase();
-  if (!s) return null;
-  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
-  let hostname;
-  try { hostname = new URL(s).hostname; } catch { return null; }
-  if (!hostname || hostname.indexOf('.') === -1) return null;
-  if (!/^[a-z0-9.-]+$/.test(hostname)) return null;
-  return hostname;
-}
-function apexDomain(host){ return String(host).replace(/^www\./, ''); }
-function pwInitial(host){
-  const a = apexDomain(host);
-  return (a[0] || '?').toUpperCase();
-}
-function pwColorFor(host){
-  let h = 0;
-  for (const c of String(host)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return PW_COLORS[h % PW_COLORS.length];
-}
-
-// 图标缓存值解码：'favicon.ico' → web；'placeholder' → 占位；'data:image/...' → 自定义；空 → 未探测
-function pwIconDecode(apex){
-  const v = pwIconCache[apex];
-  if (!v) return { kind: null };
-  if (v === 'placeholder') return { kind: 'placeholder' };
-  if (String(v).indexOf('data:') === 0) return { kind: 'custom', value: String(v) };
-  return { kind: 'web', value: String(v) };
-}
-
-// favicon 渐进增强：先渲染首字母占位，再异步探测图标，成功才替换（隐藏首字母）。
-function pwAttachFavicon(host, iconEl, initialEl){
-  const apex = apexDomain(host);
-  initialEl.textContent = pwInitial(host);
-  initialEl.style.background = pwColorFor(host);
-  initialEl.style.display = '';
-  iconEl.removeAttribute('src');
-  iconEl.style.display = '';
-  const hit = pwIconDecode(apex);
-  if (hit.kind === 'custom' || hit.kind === 'web') {
-    iconEl.onerror = () => { iconEl.style.display = 'none'; initialEl.style.display = ''; };
-    iconEl.src = hit.kind === 'custom' ? hit.value : 'https://' + apex + '/' + hit.value;
-    iconEl.alt = '';
-    initialEl.style.display = 'none';
-    return;
-  }
-  if (hit.kind === 'placeholder') return;
-  pwProbeFavicon(apex, iconEl, initialEl);
-}
-function pwProbeFavicon(apex, iconEl, initialEl){
-  const tryPath = idx => {
-    if (idx >= PW_ICON_PATHS.length) {
-      pwIconCache[apex] = 'placeholder';
-      pwSaveIconCache();
-      return;
-    }
-    const path = PW_ICON_PATHS[idx];
-    const img = new Image();
-    img.referrerPolicy = 'no-referrer';
-    img.onload = () => {
-      if (img.naturalWidth > 0) {
-        pwIconCache[apex] = path;
-        pwSaveIconCache();
-        iconEl.onerror = null;
-        iconEl.src = 'https://' + apex + '/' + path;
-        iconEl.alt = '';
-        if (initialEl) initialEl.style.display = 'none';
-      } else tryPath(idx + 1);
-    };
-    img.onerror = () => tryPath(idx + 1);
-    img.src = 'https://' + apex + '/' + path;
-  };
-  tryPath(0);
-}
-function pwSetCustomIcon(apex, dataUrl){
-  pwIconCache[apex] = dataUrl;
-  pwSaveIconCache();
-}
-function pwResetIcon(apex){
-  delete pwIconCache[apex];
-  pwSaveIconCache();
-}
-
-// 本地图片 → 缩到 maxSize 正方形 PNG dataURL（canvas 压缩，控制 localStorage 体积）
-function downscaleImageFile(file, maxSize){
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.max(1, Math.round(img.width * scale));
-        c.height = Math.max(1, Math.round(img.height * scale));
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
-        resolve(c.toDataURL('image/png'));
-      } catch (e) { URL.revokeObjectURL(url); reject(e); }
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('读取图片失败')); };
-    img.src = url;
-  });
-}
-
-// 双击头像 → 选本地图片设为自定义头像
-function pwPickCustomIcon(host, iconEl, initialEl){
-  const apex = apexDomain(host);
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.style.display = 'none';
-  document.body.appendChild(input);
-  input.addEventListener('change', async () => {
-    const file = input.files && input.files[0];
-    document.body.removeChild(input);
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { toast('图片过大，请选 8MB 以内'); return; }
-    try {
-      const dataUrl = await downscaleImageFile(file, 96);
-      pwSetCustomIcon(apex, dataUrl);
-      iconEl.onerror = null;
-      iconEl.src = dataUrl;
-      iconEl.style.display = '';
-      if (initialEl) initialEl.style.display = 'none';
-      toast('已设置自定义头像');
-    } catch { toast('读取图片失败'); }
-  });
-  input.click();
-}
-
-function genRandomPassword(len){
-  len = Math.max(8, Math.min(64, len || 16));
-  const pools = [
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    'abcdefghijklmnopqrstuvwxyz',
-    '0123456789',
-    '!@#$%^*'
-  ];
-  let out = [];
-  for (const p of pools) out.push(p[pwRand(p.length)]);
-  const all = pools.join('');
-  while (out.length < len) out.push(all[pwRand(all.length)]);
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = pwRand(i + 1);
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out.join('');
-}
-
-function pwOpenEntry(id){
-  pwEditingId = id || null;
-  const rec = id ? pwEntries.find(e => e.id === id) : null;
-  $('entryTitle').textContent = rec ? '编辑密码' : '新增密码';
-  $('entryDomain').value = rec ? rec.domain : '';
-  $('entryAccount').value = rec ? rec.account : '';
-  $('entryUsername').value = rec ? (rec.username || '') : '';
-  $('entryPassword').value = rec ? rec.password : '';
-  resetPwToggle('entryPassword');
-  $('entryErr').classList.remove('visible');
-  $('entryFields').innerHTML = '';
-  if (rec && Array.isArray(rec.fields)) {
-    rec.fields.forEach(f => pwAddFieldRow(f.name, f.value));
-  }
-  openModal('modalEntry');
-}
-function pwCloseEntry(){ closeModal('modalEntry'); }
-
-// 动态要素行：名称前缀 + 值输入框 + 内嵌垃圾桶按钮
-function pwAddFieldRow(name, value){
-  const wrap = $('entryFields');
-  const row = document.createElement('div');
-  row.className = 'entry-field-row';
-
-  const nameSpan = document.createElement('span');
-  nameSpan.className = 'ef-name';
-  nameSpan.textContent = name || '';
-  if (name) nameSpan.title = name;
-
-  const valueInput = document.createElement('input');
-  valueInput.type = 'text';
-  valueInput.className = 'ef-value';
-  valueInput.placeholder = '输入' + (name && name.trim() ? name.trim() : '自定义名称');
-  valueInput.value = value || '';
-  valueInput.setAttribute('aria-label', '要素值');
-
-  const delBtn = document.createElement('button');
-  delBtn.type = 'button';
-  delBtn.className = 'ef-del';
-  delBtn.title = '删除该要素';
-  delBtn.setAttribute('aria-label', '删除要素');
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  use.setAttribute('href', '#i-trash');
-  svg.appendChild(use);
-  delBtn.appendChild(svg);
-  delBtn.addEventListener('click', () => row.remove());
-
-  const wrapDiv = document.createElement('div');
-  wrapDiv.className = 'ef-wrap';
-  wrapDiv.appendChild(valueInput);
-  wrapDiv.appendChild(delBtn);
-
-  row.appendChild(nameSpan);
-  row.appendChild(wrapDiv);
-  wrap.appendChild(row);
-  valueInput.focus();
-}
-
-// 要素名称输入框（隐藏，点击「添加要素」时唤起）：回车新建行，Esc/失焦恢复
-function pwFieldNameStart(){
-  const input = $('fieldNameInput');
-  if (!input.classList.contains('hidden')) return;
-  input.classList.remove('hidden');
-  input.value = '';
-  input.focus();
-}
-function pwFieldNameStop(){
-  const input = $('fieldNameInput');
-  if (input.classList.contains('hidden')) return;
-  input.classList.add('hidden');
-  input.value = '';
-}
-function pwFieldNameVisible(){
-  return !$('fieldNameInput').classList.contains('hidden');
-}
-function pwFieldNameCommit(){
-  const name = $('fieldNameInput').value.trim();
-  if (name) pwAddFieldRow(name);
-  pwFieldNameStop();
-  pwFieldNameStart(); // 连续添加：行新建后再次唤起输入框
-}
-
-function pwSaveEntry(){
-  const errEl = $('entryErr');
-  const domain = normalizeDomain($('entryDomain').value);
-  const account = $('entryAccount').value.trim();
-  const username = $('entryUsername').value.trim();
-  const password = $('entryPassword').value;
-  if (!domain) { errEl.textContent = '请输入有效的账号网址'; errEl.classList.add('visible'); return; }
-  if (!account) { errEl.textContent = '请输入项目名称。'; errEl.classList.add('visible'); return; }
-  if (!pwEditingId && !password) { errEl.textContent = '请输入密码。'; errEl.classList.add('visible'); return; }
-
-  // 收集要素：名称与值都填了才保存；名称重复的报错
-  const fields = [];
-  const seenNames = new Set();
-  let hasBad = false;
-  document.querySelectorAll('#entryFields .entry-field-row').forEach(row => {
-    const name = row.querySelector('.ef-name').textContent.trim();
-    const value = row.querySelector('.ef-value').value.trim();
-    if (!name && !value) return; // 整行空 → 忽略
-    if (!name) { hasBad = true; errEl.textContent = '要素缺少名称，请补全或删除该行。'; errEl.classList.add('visible'); return; }
-    if (seenNames.has(name)) { hasBad = true; errEl.textContent = '要素名称「' + name + '」重复。'; errEl.classList.add('visible'); return; }
-    seenNames.add(name);
-    fields.push({ name: name, value: value });
-  });
-  if (hasBad) return;
-
-  if (pwEditingId) {
-    const rec = pwEntries.find(e => e.id === pwEditingId);
-    if (!rec) return;
-    const dup = pwEntries.find(e => e.id !== pwEditingId && e.domain === domain && e.account === account);
-    rec.domain = domain;
-    rec.account = account;
-    rec.username = username;
-    if (password) rec.password = password;
-    rec.fields = fields;
-    rec.updatedAt = new Date().toISOString();
-    if (dup) toast('已更新：同网址同名称已存在另一条记录');
-  } else {
-    const dup = pwEntries.find(e => e.domain === domain && e.account === account);
-    pwEntries.push({
-      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + pwRand(10000),
-      domain: domain,
-      account: account,
-      username: username,
-      password: password || genRandomPassword(16),
-      fields: fields,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-    if (dup) toast('提示：同网址同名称已存在另一条记录');
-  }
-  pwSaveEntries();
-  pwCloseEntry();
-  renderPwList();
-}
-
-function pwDeleteEntry(id){
-  const rec = pwEntries.find(e => e.id === id);
-  if (!rec) return;
-  confirmDialog('确定要删除「' + rec.domain + ' / ' + rec.account + '」这条密码记录吗？此操作不可恢复。').then(ok => {
-    if (!ok) return;
-    pwEntries = pwEntries.filter(e => e.id !== id);
-    pwSaveEntries();
-    renderPwList();
-    toast('已删除');
-  });
-}
-
-function pwToggleVisible(id, btn){
-  const rec = pwEntries.find(e => e.id === id);
-  if (!rec) return;
-  const show = !pwVisible[id];
-  pwVisible[id] = show;
-  const row = btn.closest('.pw-entry');
-  const maskEl = row.querySelector('.pw-mask');
-  maskEl.textContent = show ? rec.password : '••••••••';
-  btn.title = show ? '隐藏密码' : '显示密码';
-  btn.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
-  btn.querySelector('use').setAttribute('href', show ? '#i-eye-off' : '#i-eye');
-  if (show) {
-    clearTimeout(pwHideTimers[id]);
-    pwHideTimers[id] = setTimeout(() => pwHidePassword(id), 12000);
-  } else {
-    clearTimeout(pwHideTimers[id]);
-  }
-}
-function pwHidePassword(id){
-  if (!pwVisible[id]) return;
-  pwVisible[id] = false;
-  const row = document.querySelector('.pw-entry[data-id="' + id + '"]');
-  if (row) {
-    const maskEl = row.querySelector('.pw-mask');
-    const rec = pwEntries.find(e => e.id === id);
-    if (rec) maskEl.textContent = '••••••••';
-    const btn = row.querySelector('[data-act=show]');
-    if (btn) { btn.title = '显示密码'; btn.setAttribute('aria-label', '显示密码'); btn.querySelector('use').setAttribute('href', '#i-eye'); }
-  }
-}
-function pwHideAllPasswords(){
-  Object.keys(pwVisible).forEach(id => pwHidePassword(id));
-}
-
-function pwCopyPassword(id){
-  const rec = pwEntries.find(e => e.id === id);
-  if (rec) copyText(rec.password);
-}
-
-function renderPwList(){
-  const list = $('pwList');
-  const empty = $('pwEmpty');
-  const q = pwFilter.trim().toLowerCase();
-  let items = pwEntries.slice().sort((a, b) => pwSort.compare(a.account, b.account) || pwSort.compare(a.domain, b.domain));
-  if (q) {
-    items = items.filter(e => {
-      if (e.domain.toLowerCase().includes(q) || e.account.toLowerCase().includes(q)) return true;
-      if (e.username && e.username.toLowerCase().includes(q)) return true;
-      return (Array.isArray(e.fields) && e.fields.some(f => String(f.name).toLowerCase().includes(q) || String(f.value).toLowerCase().includes(q)));
-    });
-  }
-
-  if (!pwEntries.length) {
-    empty.classList.remove('hidden');
-    empty.querySelector('.empty-title').textContent = '密码库为空';
-    empty.querySelector('.empty-actions').innerHTML = '';
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.id = 'btnAddFirst';
-    btn.textContent = '新增密码';
-    btn.addEventListener('click', () => pwOpenEntry(null));
-    empty.querySelector('.empty-actions').appendChild(btn);
-    list.classList.add('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-  list.classList.remove('hidden');
-  list.innerHTML = '';
-
-  if (!items.length) {
-    const emptyRow = document.createElement('div');
-    emptyRow.className = 'empty-state';
-    const t = document.createElement('div');
-    t.className = 'empty-title';
-    t.textContent = '没有匹配「' + pwFilter + '」的记录';
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'btn btn-ghost';
-    clearBtn.textContent = '清除搜索';
-    clearBtn.addEventListener('click', () => { pwFilter = ''; $('pwSearch').value = ''; renderPwList(); });
-    emptyRow.appendChild(t);
-    const acts = document.createElement('div');
-    acts.className = 'empty-actions';
-    acts.appendChild(clearBtn);
-    emptyRow.appendChild(acts);
-    list.appendChild(emptyRow);
-    return;
-  }
-
-  for (const rec of items) {
-    const row = document.createElement('div');
-    row.className = 'pw-entry';
-    row.dataset.id = rec.id;
-
-    const icon = document.createElement('div');
-    icon.className = 'pw-favicon';
-    const initial = document.createElement('span');
-    icon.appendChild(initial);
-    const img = document.createElement('img');
-    img.alt = '';
-    img.loading = 'lazy';
-    img.referrerPolicy = 'no-referrer';
-    icon.appendChild(img);
-    pwAttachFavicon(rec.domain, img, initial);
-    icon.title = '双击更换头像 · 长按恢复默认';
-    let holdTimer = null;
-    icon.addEventListener('dblclick', e => { e.stopPropagation(); pwPickCustomIcon(rec.domain, img, initial); });
-    icon.addEventListener('pointerdown', e => {
-      e.preventDefault();
-      if (holdTimer) return;
-      holdTimer = setTimeout(() => {
-        holdTimer = null;
-        pwResetIcon(apexDomain(rec.domain));
-        renderPwList();
-        toast('已恢复默认图标');
-      }, 600);
-    });
-    const cancelHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } };
-    icon.addEventListener('pointerup', cancelHold);
-    icon.addEventListener('pointerleave', cancelHold);
-    icon.addEventListener('pointercancel', cancelHold);
-
-    const main = document.createElement('div');
-    main.className = 'pw-main';
-    const dom = document.createElement('div');
-    dom.className = 'pw-domain';
-    dom.textContent = rec.domain;
-    const acc = document.createElement('div');
-    acc.className = 'pw-account';
-    acc.textContent = rec.account;
-    main.appendChild(dom);
-    main.appendChild(acc);
-
-    const pass = document.createElement('div');
-    pass.className = 'pw-pass';
-    const mask = document.createElement('span');
-    mask.className = 'pw-mask';
-    mask.textContent = pwVisible[rec.id] ? rec.password : '••••••••';
-    pass.appendChild(mask);
-
-    const actions = document.createElement('div');
-    actions.className = 'pw-actions';
-    const NS = 'http://www.w3.org/2000/svg';
-    const mkSvgBtn = (title, act) => {
-      const b = document.createElement('button');
-      b.title = title;
-      b.setAttribute('aria-label', title);
-      b.dataset.act = act;
-      const svg = document.createElementNS(NS, 'svg');
-      const use = document.createElementNS(NS, 'use');
-      use.setAttribute('href', '#i-eye');
-      svg.appendChild(use);
-      b.appendChild(svg);
-      b.addEventListener('click', () => {
-        if (act === 'show') pwToggleVisible(rec.id, b);
-        else if (act === 'copy') pwCopyPassword(rec.id);
-        else if (act === 'edit') pwOpenEntry(rec.id);
-        else if (act === 'del') pwDeleteEntry(rec.id);
-      });
-      return b;
-    };
-    const showBtn = mkSvgBtn(pwVisible[rec.id] ? '隐藏密码' : '显示密码', 'show');
-    if (pwVisible[rec.id]) showBtn.querySelector('use').setAttribute('href', '#i-eye-off');
-    const copyBtn = mkSvgBtn('复制密码', 'copy');
-    copyBtn.querySelector('use').setAttribute('href', '#i-copy');
-    const editBtn = mkSvgBtn('编辑', 'edit');
-    editBtn.querySelector('use').setAttribute('href', '#i-pencil');
-    const delBtn = mkSvgBtn('删除', 'del');
-    delBtn.querySelector('use').setAttribute('href', '#i-trash');
-    delBtn.classList.add('btn-danger');
-    actions.appendChild(showBtn);
-    actions.appendChild(copyBtn);
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
-
-    row.appendChild(icon);
-    row.appendChild(main);
-    row.appendChild(pass);
-    row.appendChild(actions);
-    list.appendChild(row);
-  }
-}
-
-function pwExport(){
-  const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), entries: pwEntries }, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = '密码库备份.json';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
-  toast('已导出密码库备份');
-}
-
-function pwOpenImport(){
-  $('importEntriesText').value = '';
-  $('importEntriesErr').classList.remove('visible');
-  openModal('modalImportEntries');
-}
-function pwDoImport(){
-  const errEl = $('importEntriesErr');
-  let data;
-  try { data = JSON.parse($('importEntriesText').value); } catch { errEl.textContent = '无法解析：不是有效的 JSON。'; errEl.classList.add('visible'); return; }
-  const arr = data && Array.isArray(data.entries) ? data.entries : null;
-  if (!arr) { errEl.textContent = '备份格式不正确（缺少 entries 数组）。'; errEl.classList.add('visible'); return; }
-  let added = 0, merged = 0;
-  for (const item of arr) {
-    const domain = normalizeDomain(item.domain);
-    const account = String(item.account || '').trim();
-    const username = String(item.username || '').trim();
-    const password = String(item.password || '');
-    if (!domain || !account || !password) continue;
-    const fields = (Array.isArray(item.fields) ? item.fields : [])
-      .filter(f => f && (String(f.name).trim() || String(f.value).trim()))
-      .map(f => ({ name: String(f.name).trim(), value: String(f.value).trim() }));
-    const existing = pwEntries.find(e => e.domain === domain && e.account === account);
-    if (existing) {
-      const incoming = item.updatedAt || '';
-      if (!existing.updatedAt || incoming > existing.updatedAt) { existing.password = password; existing.username = username; existing.fields = fields; merged++; }
-    } else {
-      pwEntries.push({
-        id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + pwRand(10000),
-        domain: domain,
-        account: account,
-        username: username,
-        password: password,
-        fields: fields,
-        createdAt: item.createdAt || new Date().toISOString(),
-        updatedAt: item.updatedAt || new Date().toISOString()
-      });
-      added++;
-    }
-  }
-  pwSaveEntries();
-  closeModal('modalImportEntries');
-  renderPwList();
-  toast('导入完成：新增 ' + added + ' 条，更新 ' + merged + ' 条');
-}
-
-function wirePwlibEvents(){
-  $('btnAddEntry').addEventListener('click', () => pwOpenEntry(null));
-  $('pwSearch').addEventListener('input', function(){ pwFilter = this.value; renderPwList(); });
-  $('btnSaveEntry').addEventListener('click', pwSaveEntry);
-  $('btnAddField').addEventListener('click', pwFieldNameStart);
-  $('fieldNameInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); pwFieldNameCommit(); }
-    else if (e.key === 'Escape') { e.stopPropagation(); pwFieldNameStop(); }
-  });
-  $('fieldNameInput').addEventListener('blur', pwFieldNameStop);
-  ['entryAccount', 'entryDomain', 'entryUsername', 'entryPassword'].forEach(id => {
-    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pwSaveEntry(); } });
-  });
-  $('btnExportEntries').addEventListener('click', pwExport);
-  $('btnImportEntries').addEventListener('click', pwOpenImport);
-  $('btnDoImport').addEventListener('click', pwDoImport);
-
-  // 多标签页同步
-  window.addEventListener('storage', e => {
-    if (e.key === PW_STORE_KEY) { pwLoadEntries(); renderPwList(); }
-    else if (e.key === STORE_KEY) { loadKeys(); renderKeys(); }
-  });
-}
-
 /* ══════════ 事件绑定 ══════════ */
 
 function wireEvents(){
@@ -3135,8 +2416,6 @@ function wireEvents(){
         t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
       });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab));
-      if (tab.dataset.tab === 'pwlib') renderPwList();
-      else pwHideAllPasswords();
     });
   });
 
@@ -3145,12 +2424,6 @@ function wireEvents(){
     btn.addEventListener('click', () => closeModal(btn.dataset.close));
   });
   document.querySelectorAll('.modal-overlay').forEach(ov => {
-    // 点击阴影不再取消弹窗；modalEntry 若要素名称输入框可见则顺手收起
-    ov.addEventListener('pointerdown', e => {
-      if (e.target === ov && ov.id === 'modalEntry' && pwFieldNameVisible()) {
-        pwFieldNameStop();
-      }
-    });
     // Escape 关闭弹窗：口令弹窗视为取消，确认弹窗视为否定
     ov.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
@@ -3184,7 +2457,6 @@ function wireEvents(){
   $('impFile').addEventListener('change', async e => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    $('impFileName').textContent = file.name;
     try {
       const { parsed, armored } = await readKeyFromFile(file);
       await previewParsed(parsed, armored);
@@ -3217,6 +2489,11 @@ function wireEvents(){
   $('confirmYes').addEventListener('click', () => resolveConfirm(true));
   $('confirmNo').addEventListener('click', () => resolveConfirm(false));
   $('confirmCancel').addEventListener('click', () => resolveConfirm(false));
+
+  // 多标签页同步
+  window.addEventListener('storage', e => {
+    if (e.key === STORE_KEY) { loadKeys(); renderKeys(); }
+  });
 
   // 记事本
   $('npForOther').addEventListener('change', () => {
@@ -3278,19 +2555,23 @@ function init(){
     const h = m.querySelector('.modal-header h2');
     if (h) m.setAttribute('aria-label', h.textContent);
   });
+  // 清理旧版「密码库」遗留数据（该功能已移除）
+  try {
+    localStorage.removeItem('openpgp_pwlib_v1');
+    localStorage.removeItem('pwlib_icon_cache_v1');
+  } catch {}
   loadKeys();
   buildAlgoSelect();
   const d = new Date();
   d.setFullYear(d.getFullYear() + 3);
   $('cExpiry').value = fmtDate(d);
-  pwLoadEntries();
-  pwLoadIconCache();
   wireEvents();
   renderKeys();
   wirePasswordEvents();
-  wirePwlibEvents();
   setTimeout(pwGenerate, 50);
-  renderPwList();
+  syncScrollbarPad();
+  window.addEventListener('resize', syncScrollbarPad);
+  if (window.ResizeObserver) new ResizeObserver(syncScrollbarPad).observe(document.body);
 }
 
 init();
