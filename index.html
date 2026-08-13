@@ -29,6 +29,7 @@
     --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -952,7 +953,7 @@
       <div class="np-row">
         <label for="npPassword">使用密码加密</label>
         <span class="np-field pw-field" style="display:block">
-          <input type="password" id="npPassword" placeholder="输入密码">
+          <input type="password" id="npPassword" placeholder="输入密码" autocomplete="new-password">
           <button class="pw-toggle" type="button" data-pw-for="npPassword" aria-label="显示密码"><svg><use href="#i-eye"/></svg></button>
         </span>
       </div>
@@ -974,7 +975,7 @@
           <button class="btn btn-mini" id="btnClearOutput">清空</button>
         </span>
       </div>
-      <div id="npStatus" class="status-banner hidden"></div>
+      <div id="npStatus" class="status-banner hidden" role="status" aria-live="polite"></div>
       <textarea id="npOutput" readonly placeholder="加密 / 解密 / 签名 / 验证结果将显示在这里"></textarea>
     </div>
   </section>
@@ -1356,7 +1357,7 @@
   </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
 window.__opgErrors = [];
@@ -1441,9 +1442,6 @@ function fmtDate(d){
   if (d === null || d === undefined) return '—';
   if (d === Infinity) return '永不过期';
   return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-}
-function inputDate(d){
-  return (d instanceof Date && !isNaN(d.getTime())) ? fmtDate(d) : '';
 }
 function parseUserID(str){
   if (!str) return { name:'', email:'' };
@@ -1571,15 +1569,11 @@ async function getKeyStatus(parsed){
   return { label:'有效', cls:'valid' };
 }
 
-async function parseArmoredKeys(rec){
-  const pub = await openpgp.readKey({ armoredKey: rec.publicArmored });
-  const priv = rec.hasPrivate ? await openpgp.readPrivateKey({ armoredKey: rec.privateArmored }) : null;
-  return { pub, priv };
-}
-
 /* ══════════ 界面渲染 ══════════ */
 
 function renderNotepadSelects(){
+  const prev = {};
+  ['npSign', 'npForMe', 'npForOther'].forEach(id => { prev[id] = $(id).value; });
   const opts = [['', '无']].concat(keys.map(k => [k.fingerprint, userIDLabel(k)]));
   ['npSign', 'npForMe', 'npForOther'].forEach(id => {
     const el = $(id);
@@ -1594,6 +1588,8 @@ function renderNotepadSelects(){
       o.value = '__paste'; o.textContent = '粘贴对方公钥…';
       el.appendChild(o);
     }
+    el.value = prev[id]; // 重建后恢复原选中项（已删除的密钥会自然回到「无」）
+    if (el.selectedIndex === -1) el.selectedIndex = 0;
   });
 }
 
@@ -1606,9 +1602,13 @@ async function renderKeys(){
   if (!hasKeys) return;
 
   list.innerHTML = '';
-  for (const rec of keys) {
-    let status = { label:'有效', cls:'valid' };
-    try { status = await getKeyStatus(await openpgp.readKey({ armoredKey: rec.publicArmored })); } catch {}
+  const statuses = await Promise.all(keys.map(rec =>
+    openpgp.readKey({ armoredKey: rec.publicArmored })
+      .then(k => getKeyStatus(k))
+      .catch(() => ({ label:'有效', cls:'valid' }))
+  ));
+  keys.forEach((rec, i) => {
+    const status = statuses[i];
     const nature = rec.hasPrivate ? '公私钥对' : '公钥';
     const card = document.createElement('div');
     card.className = 'key-card';
@@ -1637,7 +1637,7 @@ async function renderKeys(){
       });
     });
     list.appendChild(card);
-  }
+  });
 }
 
 /* ══════════ 创建密钥 ══════════ */
@@ -1657,6 +1657,8 @@ function buildAlgoSelect(){
 function syncAlgoAvailability(){
   const opt = $('algoSelect').querySelector('option[value="curve448"]');
   if (opt) opt.disabled = $('fmtSelect').value === 'v4';
+  // 切换到 v4 时若正选中仅 v6 支持的 Curve448，重置为 Curve25519，避免提交无效组合
+  if (opt && opt.disabled && $('algoSelect').value === 'curve448') $('algoSelect').value = 'curve25519';
 }
 
 function setCreateLoading(loading){
@@ -2022,6 +2024,7 @@ async function changeExpiry(rec, newExpiryDate){
   const { privateKey, publicKey } = await openpgp.reformatKey(opts);
   rec.privateArmored = privateKey;
   rec.publicArmored = publicKey;
+  sessionKeys.delete(rec.fingerprint); // 清除旧的已解密缓存，下次使用时会重新读取
   saveKeys();
 }
 
@@ -2099,20 +2102,25 @@ function showOpError(msg){
 
 async function collectEncryptionKeys(){
   const encryptionKeys = [];
+  const seen = new Set();
+  const addKey = k => {
+    const fp = k.getFingerprint();
+    if (!seen.has(fp)) { seen.add(fp); encryptionKeys.push(k); }
+  };
   const meFp = $('npForMe').value;
   const otherFp = $('npForOther').value;
   const otherPaste = $('npOtherKey').value.trim();
   if (meFp) {
     const rec = getRec(meFp);
-    if (rec) encryptionKeys.push(await openpgp.readKey({ armoredKey: rec.publicArmored }));
+    if (rec) addKey(await openpgp.readKey({ armoredKey: rec.publicArmored }));
   }
   if (otherFp && otherFp !== '__paste') {
     const rec = getRec(otherFp);
-    if (rec) encryptionKeys.push(await openpgp.readKey({ armoredKey: rec.publicArmored }));
+    if (rec) addKey(await openpgp.readKey({ armoredKey: rec.publicArmored }));
   }
   if (otherPaste) {
     const k = await openpgp.readKey({ armoredKey: otherPaste });
-    encryptionKeys.push(k.toPublic());
+    addKey(k.toPublic());
   }
   return encryptionKeys;
 }
@@ -2224,13 +2232,21 @@ async function doDecrypt(){
         const ids = kp.getKeys().map(kk => kk.getKeyID().toHex());
         if (targetKeyIDs.some(id => ids.indexOf(id) >= 0)) { matched = rec; break; }
       }
-      if (!matched) { showOpError('没有找到能解密此消息的私钥（消息加密对象不在本地密钥库中）。'); return; }
-      decryptionKeys.push(await getDecryptedPrivate(matched.fingerprint));
+      if (matched) {
+        decryptionKeys.push(await getDecryptedPrivate(matched.fingerprint));
+      } else if (!passwords.length) {
+        showOpError('没有找到能解密此消息的私钥。若消息使用密码加密，请先在上方输入密码。');
+        return;
+      }
+    }
+    if (!targetKeyIDs.length && !passwords.length) {
+      showOpError('无法确定消息的解密对象（未指定收件人密钥 ID）。若消息使用密码加密，请先在上方输入密码。');
+      return;
     }
 
     const verificationKeys = [];
     for (const rec of keys) {
-      verificationKeys.push(await openpgp.readKey({ armoredKey: rec.publicArmored }));
+      try { verificationKeys.push(await openpgp.readKey({ armoredKey: rec.publicArmored })); } catch {}
     }
 
     const decryptOpts = {
@@ -2317,7 +2333,22 @@ async function copyText(text){
   }
 }
 
-function openModal(id){ $(id).classList.add('open'); }
+function openModal(id){
+  const ov = $(id);
+  ov.classList.add('open');
+  // 打开后聚焦第一个可见的可交互元素（优先表单输入框），方便键盘操作
+  const els = ov.querySelectorAll('input, select, textarea, button');
+  let target = null;
+  for (const wantField of [true, false]) {
+    for (const el of els) {
+      if (el.disabled || el.type === 'hidden' || !el.getClientRects().length) continue;
+      if (wantField !== (el.tagName !== 'BUTTON')) continue;
+      target = el; break;
+    }
+    if (target) break;
+  }
+  if (target) setTimeout(() => target.focus(), 10);
+}
 function closeModal(id){ $(id).classList.remove('open'); }
 
 let toastTimer = null;
@@ -2343,14 +2374,25 @@ function pwRemoveChars(str, chars) {
   const set = new Set(chars);
   return str.split('').filter(c => !set.has(c)).join('');
 }
+// 密码学安全随机数（crypto.getRandomValues），拒绝采样消除取模偏差；极端环境回退 Math.random
+function pwRand(n) {
+  const buf = new Uint32Array(1);
+  if (window.crypto && crypto.getRandomValues) {
+    const limit = Math.floor(0x100000000 / n) * n;
+    let v;
+    do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+    return v % n;
+  }
+  return Math.floor(Math.random() * n);
+}
 function pwShuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = pwRand(i + 1);
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
 }
-function pwPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function pwPick(arr) { return arr[pwRand(arr.length)]; }
 function pwPickN(arr, n) {
   if (n === 0) return [];
   const copy = arr.slice();
@@ -2432,7 +2474,14 @@ function pwGenerate() {
 function pwCalcStrength(password, pools) {
   const combined = pwGetCombinedPool(pools);
   const poolSize = combined.length;
-  const entropy = password.length * Math.log2(poolSize);
+  let entropy;
+  if ($('optDuplicate').checked) {
+    // 无重复字符（不放回抽样）：每个位置的可选字符数递减，熵按各位置求和
+    entropy = 0;
+    for (let i = 0; i < password.length; i++) entropy += Math.log2(Math.max(1, poolSize - i));
+  } else {
+    entropy = password.length * Math.log2(poolSize);
+  }
   let level;
   if (entropy < 30) level = 'weak';
   else if (entropy < 50) level = 'medium';
@@ -2652,11 +2701,11 @@ function genRandomPassword(len){
     '!@#$%^*'
   ];
   let out = [];
-  for (const p of pools) out.push(p[Math.floor(Math.random() * p.length)]);
+  for (const p of pools) out.push(p[pwRand(p.length)]);
   const all = pools.join('');
-  while (out.length < len) out.push(all[Math.floor(Math.random() * all.length)]);
+  while (out.length < len) out.push(all[pwRand(all.length)]);
   for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = pwRand(i + 1);
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out.join('');
@@ -2784,7 +2833,7 @@ function pwSaveEntry(){
   } else {
     const dup = pwEntries.find(e => e.domain === domain && e.account === account);
     pwEntries.push({
-      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.floor(Math.random() * 10000),
+      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + pwRand(10000),
       domain: domain,
       account: account,
       username: username,
@@ -2859,6 +2908,7 @@ function renderPwList(){
   if (q) {
     items = items.filter(e => {
       if (e.domain.toLowerCase().includes(q) || e.account.toLowerCase().includes(q)) return true;
+      if (e.username && e.username.toLowerCase().includes(q)) return true;
       return (Array.isArray(e.fields) && e.fields.some(f => String(f.name).toLowerCase().includes(q) || String(f.value).toLowerCase().includes(q)));
     });
   }
@@ -2911,6 +2961,7 @@ function renderPwList(){
     const img = document.createElement('img');
     img.alt = '';
     img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
     icon.appendChild(img);
     pwAttachFavicon(rec.domain, img, initial);
     icon.title = '双击更换头像 · 长按恢复默认';
@@ -3019,6 +3070,7 @@ function pwDoImport(){
   for (const item of arr) {
     const domain = normalizeDomain(item.domain);
     const account = String(item.account || '').trim();
+    const username = String(item.username || '').trim();
     const password = String(item.password || '');
     if (!domain || !account || !password) continue;
     const fields = (Array.isArray(item.fields) ? item.fields : [])
@@ -3027,12 +3079,13 @@ function pwDoImport(){
     const existing = pwEntries.find(e => e.domain === domain && e.account === account);
     if (existing) {
       const incoming = item.updatedAt || '';
-      if (!existing.updatedAt || incoming > existing.updatedAt) { existing.password = password; existing.fields = fields; merged++; }
+      if (!existing.updatedAt || incoming > existing.updatedAt) { existing.password = password; existing.username = username; existing.fields = fields; merged++; }
     } else {
       pwEntries.push({
-        id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.floor(Math.random() * 10000),
+        id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + pwRand(10000),
         domain: domain,
         account: account,
+        username: username,
         password: password,
         fields: fields,
         createdAt: item.createdAt || new Date().toISOString(),
@@ -3060,8 +3113,6 @@ function wirePwlibEvents(){
   ['entryAccount', 'entryDomain', 'entryUsername', 'entryPassword'].forEach(id => {
     $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pwSaveEntry(); } });
   });
-  $('modalEntry').addEventListener('keydown', e => { if (e.key === 'Escape') pwCloseEntry(); });
-  $('modalImportEntries').addEventListener('keydown', e => { if (e.key === 'Escape') closeModal('modalImportEntries'); });
   $('btnExportEntries').addEventListener('click', pwExport);
   $('btnImportEntries').addEventListener('click', pwOpenImport);
   $('btnDoImport').addEventListener('click', pwDoImport);
@@ -3069,6 +3120,7 @@ function wirePwlibEvents(){
   // 多标签页同步
   window.addEventListener('storage', e => {
     if (e.key === PW_STORE_KEY) { pwLoadEntries(); renderPwList(); }
+    else if (e.key === STORE_KEY) { loadKeys(); renderKeys(); }
   });
 }
 
@@ -3078,7 +3130,10 @@ function wireEvents(){
   // 标签页
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t === tab);
+        t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+      });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab));
       if (tab.dataset.tab === 'pwlib') renderPwList();
       else pwHideAllPasswords();
@@ -3095,6 +3150,14 @@ function wireEvents(){
       if (e.target === ov && ov.id === 'modalEntry' && pwFieldNameVisible()) {
         pwFieldNameStop();
       }
+    });
+    // Escape 关闭弹窗：口令弹窗视为取消，确认弹窗视为否定
+    ov.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      if (ov.id === 'modalPass') resolvePass(null);
+      else if (ov.id === 'modalConfirm') resolveConfirm(false);
+      else closeModal(ov.id);
     });
   });
 
@@ -3137,6 +3200,8 @@ function wireEvents(){
       const parsed = await openpgp.readKey({ armoredKey: text });
       await previewParsed(parsed, text);
     } catch {
+      pendingImport = null; // 清掉文件标签页遗留的待导入状态，避免预览与按钮状态不一致
+      $('impPreview').classList.add('hidden');
       $('btnConfirmImport').disabled = true;
     }
   });
@@ -3206,6 +3271,13 @@ function wireEvents(){
 /* ══════════ 初始化 ══════════ */
 
 function init(){
+  // 弹窗无障碍标注（role=dialog + aria-label 取标题文本）
+  document.querySelectorAll('.modal-overlay .modal').forEach(m => {
+    m.setAttribute('role', 'dialog');
+    m.setAttribute('aria-modal', 'true');
+    const h = m.querySelector('.modal-header h2');
+    if (h) m.setAttribute('aria-label', h.textContent);
+  });
   loadKeys();
   buildAlgoSelect();
   const d = new Date();
