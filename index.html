@@ -7,6 +7,9 @@
 <meta name="theme-color" content="#101418" media="(prefers-color-scheme: dark)">
 <title>密码工具</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338BDF8'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E">
+<!-- 配色生成器必须在样式表之前同步执行，否则首屏会先闪一下默认配色 -->
+<script src="js/mcu.min.js"></script>
+<script src="js/theme.js"></script>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -20,10 +23,19 @@
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
     <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67A2.5 2.5 0 0 1 12 22z"/><circle cx="7.5" cy="11.5" r=".9" fill="currentColor" stroke="none"/><circle cx="9.8" cy="7.8" r=".9" fill="currentColor" stroke="none"/><circle cx="14.2" cy="7.8" r=".9" fill="currentColor" stroke="none"/><circle cx="16.5" cy="11.5" r=".9" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
+    <symbol id="i-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   </defs>
 </svg>
 
 <div class="container">
+
+  <button class="icon-btn theme-btn" id="themeBtn" type="button" aria-label="主题设置" title="主题设置">
+    <svg><use href="#i-palette"/></svg>
+  </button>
 
   <header class="page-header">
     <h1>密码工具</h1>
@@ -60,7 +72,15 @@
   <!-- ═══════ 记事本 ═══════ -->
   <section id="tab-notepad" class="tab-panel">
     <div class="card">
-      <label class="field-label" for="npInput">信息</label>
+      <div class="np-info-head">
+        <label class="field-label" for="npInput">信息</label>
+        <button class="btn btn-ghost btn-mini" id="btnUploadFile" type="button">上传文件</button>
+        <input type="file" id="npFileInput" hidden>
+      </div>
+      <div class="np-file hidden" id="npFileInfo">
+        <span class="np-file-name" id="npFileName"></span>
+        <button class="icon-btn" id="btnClearFile" type="button" aria-label="移除文件">&times;</button>
+      </div>
       <textarea id="npInput" placeholder="输入要加密或解密的信息"></textarea>
     </div>
 
@@ -106,8 +126,8 @@
       <div class="np-result-head">
         <span class="section-title" style="margin:0">结果</span>
         <span class="np-result-actions">
-          <button class="btn btn-mini" id="btnCopyOutput">复制</button>
           <button class="btn btn-mini" id="btnClearOutput">清空</button>
+          <button class="btn btn-mini" id="btnCopyOutput">复制</button>
         </span>
       </div>
       <div id="npStatus" class="status-banner hidden" role="status" aria-live="polite"></div>
@@ -214,18 +234,20 @@
 
       <div class="pw-error" id="errorMsg"></div>
 
-      <button class="btn-generate" id="btnGenerate">
-        <span class="icon">&#x21bb;</span>
-        生成密码
-      </button>
+      <div class="generate-row">
+        <button class="btn-generate" id="btnGenerate">
+          <span class="icon">&#x21bb;</span>
+          生成密码
+        </button>
+        <button class="btn-copy" id="btnCopy" type="button" aria-label="复制密码" disabled>
+          <svg><use href="#i-copy"/></svg>
+          <span>复制密码</span>
+        </button>
+      </div>
 
       <div class="password-section hidden" id="passwordSection">
         <div class="password-display">
           <span class="pw-text" id="passwordText"></span>
-          <button class="btn-copy" id="btnCopy" aria-label="复制密码">
-            <svg><use href="#i-copy"/></svg>
-            <span class="tooltip" id="copyTooltip">已复制!</span>
-          </button>
         </div>
 
         <div class="strength-section" id="strengthSection">
@@ -237,7 +259,6 @@
           </div>
           <div class="strength-label">
             <span id="strengthText"></span>
-            <span class="bits" id="strengthBits"></span>
           </div>
         </div>
       </div>
@@ -292,7 +313,13 @@
           <label class="field-label" for="cExpiry">有效期至</label>
           <label class="check-inline"><input type="checkbox" id="cNeverExpire">永不过期</label>
         </div>
-        <input type="date" id="cExpiry">
+        <div class="date-field" data-date-field>
+          <input type="hidden" id="cExpiry">
+          <button type="button" class="date-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="有效期至">
+            <span class="date-value">选择日期</span>
+            <svg class="date-icon"><use href="#i-calendar"/></svg>
+          </button>
+        </div>
       </div>
       <div class="field">
         <label class="field-label" for="fmtSelect">密钥版本</label>
@@ -397,6 +424,63 @@
       <button class="btn btn-ghost" id="confirmNo">取消</button>
       <button class="btn btn-danger" id="confirmYes">删除</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════ 主题设置 ═══════ -->
+<div class="modal-overlay" id="themeModal">
+  <div class="modal" tabindex="-1">
+    <div class="modal-header">
+      <h2>主题设置</h2>
+      <button class="modal-close" data-close="themeModal" aria-label="关闭">&times;</button>
+    </div>
+
+    <div class="theme-label">深浅色</div>
+    <div class="mode-tabs" id="themeMode" role="group" aria-label="颜色模式">
+      <span class="mode-indicator" aria-hidden="true"></span>
+      <button class="mode-tab" type="button" data-mode="light" aria-pressed="false"><svg><use href="#i-sun"/></svg>浅色</button>
+      <button class="mode-tab" type="button" data-mode="auto" aria-pressed="false"><svg><use href="#i-auto"/></svg>自动</button>
+      <button class="mode-tab" type="button" data-mode="dark" aria-pressed="false"><svg><use href="#i-moon"/></svg>深色</button>
+    </div>
+
+    <div class="theme-label">主题色</div>
+    <div class="seed-grid" id="seedGrid" role="group" aria-label="预设主题色">
+      <button class="seed-dot" type="button" data-seed="#0061A4" style="--dot:#0061A4" aria-label="蓝色 #0061A4" title="#0061A4"></button>
+      <button class="seed-dot" type="button" data-seed="#6750A4" style="--dot:#6750A4" aria-label="紫色 #6750A4" title="#6750A4"></button>
+      <button class="seed-dot" type="button" data-seed="#B3261E" style="--dot:#B3261E" aria-label="红色 #B3261E" title="#B3261E"></button>
+      <button class="seed-dot" type="button" data-seed="#C425A8" style="--dot:#C425A8" aria-label="洋红 #C425A8" title="#C425A8"></button>
+      <button class="seed-dot" type="button" data-seed="#00897B" style="--dot:#00897B" aria-label="青色 #00897B" title="#00897B"></button>
+      <button class="seed-dot" type="button" data-seed="#388E3C" style="--dot:#388E3C" aria-label="绿色 #388E3C" title="#388E3C"></button>
+      <button class="seed-dot" type="button" data-seed="#FBC02D" style="--dot:#FBC02D" aria-label="黄色 #FBC02D" title="#FBC02D"></button>
+      <button class="seed-dot" type="button" data-seed="#E65100" style="--dot:#E65100" aria-label="橙色 #E65100" title="#E65100"></button>
+    </div>
+
+    <div class="theme-custom">
+      <button class="btn btn-ghost btn-mini" id="themeCustom" type="button">
+        <svg><use href="#i-palette"/></svg>
+        自定义颜色
+      </button>
+      <button class="btn btn-ghost btn-mini" id="themeSave" type="button" disabled>保存</button>
+      <input type="color" id="themeColor" value="#0061a4" aria-label="自定义主题色">
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 日期选择器 ═══════ -->
+<div class="date-pop hidden" id="datePop" role="dialog" aria-label="选择日期">
+  <div class="date-pop-head">
+    <button class="icon-btn date-nav" id="datePrev" type="button" aria-label="上个月">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="date-title" id="dateTitle"></div>
+    <button class="icon-btn date-nav" id="dateNext" type="button" aria-label="下个月">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+  <div class="date-week" id="dateWeek" aria-hidden="true"></div>
+  <div class="date-grid" id="dateGrid"></div>
+  <div class="date-foot">
+    <button class="btn btn-ghost btn-mini" id="dateToday" type="button">今天</button>
   </div>
 </div>
 
