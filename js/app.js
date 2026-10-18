@@ -5,21 +5,21 @@ var __loadMsg = null;
 try {
   if (!window.crypto || !window.crypto.subtle) {
     if (location.protocol === 'data:') {
-      __loadMsg = '当前以 data: URL 方式预览，浏览器在此环境下禁止使用 WebCrypto 加密 API，导致加密库无法加载。请将 index.html 保存为本地文件后双击打开（file://），或通过本地服务器（http://localhost）访问。';
+      __loadMsg = '请用本地文件打开';
     } else {
-      __loadMsg = '浏览器未提供 WebCrypto（crypto.subtle）API。请在安全上下文中打开本页：双击本地文件（file://）或通过 http://localhost 访问。';
+      __loadMsg = '请用安全上下文打开';
     }
   } else if (!window.openpgp) {
-    __loadMsg = 'OpenPGP 库未能加载。可能原因：页面被部分截断 / 修改 / 浏览器插件冲突。请重新获取完整的 index.html 文件。';
+    __loadMsg = '加密库加载失败';
   }
-} catch (e) {
-  __loadMsg = '页面初始化出错：' + (e && e.message || e);
+} catch {
+  __loadMsg = '页面初始化失败';
 }
 if (__loadMsg) {
   var __errs = (window.__opgErrors || []).map(function(s){ return '<div>' + String(s).replace(/[<>&]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]; }) + '</div>'; }).join('');
   document.body.insertAdjacentHTML('afterbegin',
     '<div style="max-width:640px;margin:20px auto;padding:16px 18px;border:1px solid #C44E4E;border-radius:8px;background:#FDF2F2;color:#1C1C1C;font-size:13px;line-height:1.7">' +
-      '<div style="font-weight:600;color:#C44E4E;margin-bottom:8px">加密库未能加载，功能不可用。</div>' +
+      '<div style="font-weight:600;color:#C44E4E;margin-bottom:8px">加密库加载失败</div>' +
       '<div>' + __loadMsg.replace(/[<>&]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]; }) + '</div>' +
       (__errs ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(196,78,78,.3);font-family:Consolas,monospace;font-size:12px"><div style="font-weight:600;margin-bottom:4px">浏览器错误详情：</div>' + __errs + '</div>' : '') +
       '<div style="margin-top:8px">window.openpgp = ' + typeof window.openpgp + ' · crypto.subtle = ' + (window.crypto && window.crypto.subtle ? '可用' : '不可用') + '</div>' +
@@ -52,13 +52,7 @@ function writeStore(key, val){
 
 /* ══════════ 基础工具 ══════════ */
 
-// 滚动条占位补偿：
-// - 支持 scrollbar-gutter: stable 的环境已预留空间（无可见缺口、无位移），
-//   但预留量不反映在 clientWidth 中；
-// - 不支持的环境（如自定义滚动条下的 Chromium）滚动条会挤压布局宽度。
-// 两种情况下，「innerWidth - body.clientWidth」都等于滚动条实际挤占的
-// 布局宽度（gutter 预留时恒为预留值），补偿到 body 左内边距后，
-// 居中内容在滚动条出现/消失时始终相对视口居中、零位移。
+// 用 innerWidth - body.clientWidth 补偿滚动条占用的宽度，避免居中内容位移。
 function syncScrollbarPad(){
   const pad = Math.max(0, window.innerWidth - document.body.clientWidth);
   document.documentElement.style.setProperty('--sb-w', pad + 'px');
@@ -89,10 +83,10 @@ function friendlyError(msg){
   if (/passphrase|wrong secret key|Bad session key|Incorrect session key|Invalid session key|decryption failed/i.test(msg))
     return '密码或私钥口令不正确';
   if (/Could not find|No key|no key|unrecognised|unrecognized|Unknown packet|not a valid/i.test(msg))
-    return '找不到匹配的密钥或无法解析输入内容';
-  if (/armor|Armor/i.test(msg)) return '无法解析 ASCII armor 内容';
+    return '找不到密钥或格式错误';
+  if (/armor|Armor/i.test(msg)) return '格式无法解析';
   if (/expired/i.test(msg)) return '密钥已过期';
-  return msg;
+  return '操作失败';
 }
 
 /* ══════════ 密钥存储 ══════════ */
@@ -216,12 +210,11 @@ async function copyText(text){
   }
 }
 
-/* ── 弹窗：被按下的那个按钮决定弹窗从哪儿长出来 ── */
+/* ── 弹窗 ── */
 function openModal(id, trigger){
   const ov = $(id);
   ov.classList.add('open');
-  // 弹窗从被按下的那个按钮长出来（onetake morphRect：被按下的那个变成结果）。
-  // 必须在回流之前设好，动画第一帧才用得上这个 origin。
+  // 从触发按钮的位置展开，必须在回流前设 origin
   const modal = ov.querySelector('.modal');
   const trig = trigger || lastPressed;
   if (modal && trig && trig.getBoundingClientRect().width) {
@@ -252,6 +245,209 @@ function toast(msg){
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ── 日期选择器 ── */
+let dateTarget = null;
+let dateView = null;
+
+function parseISODate(v){
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(v + 'T00:00:00') : null;
+}
+
+function sameDay(a, b){
+  return !!a && !!b &&
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
+function displayDate(d){
+  return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate());
+}
+
+function syncDateField(idOrInput){
+  const input = typeof idOrInput === 'string' ? $(idOrInput) : idOrInput;
+  if (!input) return;
+  const field = input.closest('[data-date-field]');
+  if (!field) return;
+  const trigger = field.querySelector('.date-trigger');
+  const value = field.querySelector('.date-value');
+  if (!trigger || !value) return;
+  const d = parseISODate(input.value);
+  value.textContent = d ? displayDate(d) : '选择日期';
+  value.classList.toggle('is-placeholder', !d);
+  trigger.disabled = input.disabled;
+}
+
+function initDateFields(root){
+  (root || document).querySelectorAll('[data-date-field]').forEach(field => {
+    if (field.dataset.ready) return;
+    field.dataset.ready = '1';
+    const input = field.querySelector('input[type="hidden"]');
+    const trigger = field.querySelector('.date-trigger');
+    if (!input || !trigger) return;
+    trigger.addEventListener('click', () => openDatePop(input, trigger));
+    syncDateField(input);
+  });
+}
+
+function positionDatePop(){
+  const pop = $('datePop');
+  if (!pop || !dateTarget) return;
+  const field = dateTarget.closest('[data-date-field]');
+  const trigger = field && field.querySelector('.date-trigger');
+  if (!trigger) return;
+  const r = trigger.getBoundingClientRect();
+  const w = pop.offsetWidth;
+  const h = pop.offsetHeight;
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+  let top = r.bottom + 6;
+  if (top + h > window.innerHeight - 8) top = r.top - h - 6;
+  pop.style.left = left + 'px';
+  pop.style.top = Math.max(8, top) + 'px';
+}
+
+function focusDay(iso){
+  const grid = $('dateGrid');
+  if (!grid) return;
+  const btn = grid.querySelector('.date-day[data-date="' + iso + '"]');
+  if (btn) { btn.focus(); return; }
+  const d = parseISODate(iso);
+  if (d) {
+    dateView = new Date(d.getFullYear(), d.getMonth(), 1);
+    renderDatePop();
+    focusDay(iso);
+  }
+}
+
+function renderDatePop(){
+  const pop = $('datePop');
+  if (!pop || !dateTarget) return;
+  const grid = $('dateGrid');
+  const week = $('dateWeek');
+  const y = dateView.getFullYear();
+  const m = dateView.getMonth();
+  $('dateTitle').textContent = y + '年' + (m + 1) + '月';
+  if (!week.children.length) {
+    ['一', '二', '三', '四', '五', '六', '日'].forEach(t => {
+      const s = document.createElement('span');
+      s.textContent = t;
+      week.appendChild(s);
+    });
+  }
+  const offset = (new Date(y, m, 1).getDay() + 6) % 7;
+  const days = new Date(y, m + 1, 0).getDate();
+  const total = Math.ceil((offset + days) / 7) * 7;
+  const start = new Date(y, m, 1 - offset);
+  const selected = parseISODate(dateTarget.value);
+  const today = new Date();
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < total; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const iso = fmtDate(d);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'date-day';
+    btn.dataset.date = iso;
+    btn.textContent = d.getDate();
+    btn.setAttribute('aria-label', d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日');
+    if (d.getMonth() !== m) btn.classList.add('is-outside');
+    if (sameDay(d, today)) btn.classList.add('is-today');
+    if (sameDay(d, selected)) {
+      btn.classList.add('is-selected');
+      btn.setAttribute('aria-selected', 'true');
+    }
+    btn.addEventListener('click', () => pickDate(iso));
+    frag.appendChild(btn);
+  }
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+}
+
+function openDatePop(input, trigger){
+  if (input.disabled) return;
+  if (dateTarget === input) { closeDatePop(true); return; }
+  dateTarget = input;
+  const selected = parseISODate(input.value);
+  const base = selected || new Date();
+  dateView = new Date(base.getFullYear(), base.getMonth(), 1);
+  renderDatePop();
+  $('datePop').classList.remove('hidden');
+  trigger.setAttribute('aria-expanded', 'true');
+  positionDatePop();
+  focusDay(selected ? input.value : fmtDate(new Date()));
+}
+
+function closeDatePop(refocus){
+  const pop = $('datePop');
+  if (!pop || !dateTarget) return;
+  const field = dateTarget.closest('[data-date-field]');
+  const trigger = field && field.querySelector('.date-trigger');
+  pop.classList.add('hidden');
+  dateTarget = null;
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  if (refocus && trigger) trigger.focus();
+}
+
+function pickDate(iso){
+  if (!dateTarget) return;
+  dateTarget.value = iso;
+  syncDateField(dateTarget);
+  dateTarget.dispatchEvent(new Event('change', { bubbles: true }));
+  closeDatePop(true);
+}
+
+function shiftMonth(delta){
+  if (!dateView) return;
+  dateView = new Date(dateView.getFullYear(), dateView.getMonth() + delta, 1);
+  renderDatePop();
+  focusDay(fmtDate(dateView));
+}
+
+function initDatePicker(){
+  const pop = $('datePop');
+  if (!pop || pop.dataset.ready) return;
+  pop.dataset.ready = '1';
+  $('datePrev').addEventListener('click', () => shiftMonth(-1));
+  $('dateNext').addEventListener('click', () => shiftMonth(1));
+  $('dateToday').addEventListener('click', () => pickDate(fmtDate(new Date())));
+  document.addEventListener('click', e => {
+    if (!dateTarget) return;
+    if (pop.contains(e.target)) return;
+    const field = dateTarget.closest('[data-date-field]');
+    if (field && field.contains(e.target)) return;
+    closeDatePop(false);
+  });
+  document.addEventListener('keydown', e => {
+    if (!dateTarget || e.key !== 'Escape') return;
+    e.preventDefault();
+    closeDatePop(true);
+  });
+  $('dateGrid').addEventListener('keydown', e => {
+    const btn = e.target.closest('.date-day');
+    if (!btn) return;
+    let delta = 0;
+    if (e.key === 'ArrowLeft') delta = -1;
+    else if (e.key === 'ArrowRight') delta = 1;
+    else if (e.key === 'ArrowUp') delta = -7;
+    else if (e.key === 'ArrowDown') delta = 7;
+    if (delta) {
+      e.preventDefault();
+      const d = parseISODate(btn.dataset.date);
+      const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + delta);
+      if (next.getFullYear() !== dateView.getFullYear() || next.getMonth() !== dateView.getMonth()) {
+        dateView = new Date(next.getFullYear(), next.getMonth(), 1);
+        renderDatePop();
+      }
+      focusDay(fmtDate(next));
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      pickDate(btn.dataset.date);
+    }
+  });
+  window.addEventListener('resize', () => { if (dateTarget) positionDatePop(); });
+  window.addEventListener('scroll', () => { if (dateTarget) closeDatePop(false); }, true);
 }
 
 /* ── 口令：prompt → 解密 ── */
@@ -298,9 +494,7 @@ function resolveConfirm(value){
   if (confirmResolver) { const r = confirmResolver; confirmResolver = null; r(value); }
 }
 
-/* ══════════ 界面基础 · 动效 ══════════
-   思想来自 onetake：位移是纯函数、曲线按动作性质选；看不见「因」的动效等于屏保。
-   这里只放 CSS 做不到的三件事——重播、带 origin 的弹窗、跨边界的 carry。 */
+/* ══════════ 界面基础 · 动效 ══════════ */
 
 // 重放一次性的入场动画：摘掉类 → 强制回流 → 再挂上，否则第二次同样的结果不会重播
 function replay(el, cls){
@@ -309,11 +503,7 @@ function replay(el, cls){
   el.classList.add(cls);
 }
 
-/* ── Tab 切换：指示器是唯一跨过边界的元素 ──
-   旧做法是三块面板 display:none 互斥 + 同一个 6px 淡入，onetake 把这种判为 slideshow
-   （「Mutually exclusive scenes are slides even with perfect rhythm」）。
-   现在：胶囊滑过去并全程可见（carry），旧面板停在原地收走、新面板在 80ms 时开始上升，
-   两者重叠 60ms —— 场景是交接的，不是替换的。 */
+/* ── Tab 切换：指示器跨过边界，新旧面板短暂重叠 ── */
 const TAB_RISE_MS = 700;      // var(--rise-handoff) + var(--dur-rise) + 最大错峰，之后摘掉 .rising
 
 function placeTabIndicator(tab){
@@ -363,7 +553,7 @@ function switchTab(tab){
 
   if (next) {
     next.classList.add('active');
-    // 立刻挂上，延迟由 CSS 的 --rise-handoff 承担 —— 挂晚了新内容会先整个显形再往下掉
+    // 延迟由 CSS 的 --rise-handoff 承担
     next.classList.add('rising');
     setTimeout(() => next.classList.remove('rising'), TAB_RISE_MS);
   }
@@ -375,9 +565,7 @@ function switchTab(tab){
   placeTabIndicator(tab);
 }
 
-/* ── 接触反馈 ──
-   按下有深度（:active 下压），松开弹出一圈环（onetake impact）。
-   同时记住最后被按下的按钮：弹窗据此决定从哪儿长出来，不必逐处传参。 */
+/* ── 接触反馈 ── */
 let lastPressed = null;
 let suppressReveal = false;
 
@@ -398,7 +586,7 @@ function wireMotion(){
     replay(el, 'impact');
   }, true);
 
-  // 键盘触发的点击没有 pointerdown/up（detail 为 0）：补上环，并把「因」记成这个按钮
+  // 键盘点击没有 pointer 事件，补上环
   document.addEventListener('click', e => {
     if (e.detail !== 0) return;
     const el = e.target.closest && e.target.closest(RING);
@@ -432,6 +620,8 @@ function renderNotepadSelects(){
   });
 }
 
+let keysSettleTimer = null;
+
 async function renderKeys(){
   renderNotepadSelects();
   const empty = $('keysEmpty'), list = $('keysList');
@@ -443,6 +633,8 @@ async function renderKeys(){
   if (!hasKeys) return;
 
   list.innerHTML = '';
+  list.classList.remove('settled');
+  clearTimeout(keysSettleTimer);
   const statuses = await Promise.all(keys.map(rec =>
     openpgp.readKey({ armoredKey: rec.publicArmored })
       .then(k => getKeyStatus(k))
@@ -478,6 +670,8 @@ async function renderKeys(){
     });
     list.appendChild(card);
   });
+  // 入场动画只属于「密钥出现」这一刻；切回本标签页时不再逐张重播
+  keysSettleTimer = setTimeout(() => list.classList.add('settled'), 650);
 }
 
 /* ══════════ 创建密钥 ══════════ */
@@ -497,7 +691,7 @@ function buildAlgoSelect(){
 function syncAlgoAvailability(){
   const opt = $('algoSelect').querySelector('option[value="curve448"]');
   if (opt) opt.disabled = $('fmtSelect').value === 'v4';
-  // 切换到 v4 时若正选中仅 v6 支持的 Curve448，重置为 Curve25519，避免提交无效组合
+  // v4 不支持 Curve448 时回退到 Curve25519
   if (opt && opt.disabled && $('algoSelect').value === 'curve448') $('algoSelect').value = 'curve25519';
 }
 
@@ -505,6 +699,8 @@ function setCreateLoading(loading){
   $('btnSubmitCreate').disabled = loading;
   $('btnSubmitCreate').textContent = loading ? '正在生成密钥…' : '创建';
   ['cName','cEmail','cPassword','algoSelect','cExpiry','cNeverExpire','fmtSelect'].forEach(id => $(id).disabled = loading);
+  if (!loading) $('cExpiry').disabled = $('cNeverExpire').checked;
+  syncDateField('cExpiry');
 }
 
 async function submitCreate(){
@@ -512,7 +708,7 @@ async function submitCreate(){
   const email = $('cEmail').value.trim();
   const errEl = $('cErr');
   errEl.classList.remove('visible');
-  if (!name && !email) { errEl.textContent = '名称和邮箱至少填写一个。'; errEl.classList.add('visible'); return; }
+  if (!name && !email) { errEl.textContent = '请填写名称或邮箱'; errEl.classList.add('visible'); return; }
 
   const pass = $('cPassword').value;
   const algo = $('algoSelect').value;
@@ -522,9 +718,9 @@ async function submitCreate(){
   let seconds = 0;
   if (!never) {
     const exp = new Date($('cExpiry').value + 'T23:59:59');
-    if (isNaN(exp.getTime())) { errEl.textContent = '请选择有效期至的日期。'; errEl.classList.add('visible'); return; }
+    if (isNaN(exp.getTime())) { errEl.textContent = '请选择有效期'; errEl.classList.add('visible'); return; }
     const diff = Math.round((exp.getTime() - Date.now()) / 1000);
-    if (diff <= 0) { errEl.textContent = '有效期至不能早于当前时间。'; errEl.classList.add('visible'); return; }
+    if (diff <= 0) { errEl.textContent = '有效期不能早于现在'; errEl.classList.add('visible'); return; }
     seconds = diff;
   }
 
@@ -605,7 +801,7 @@ async function previewParsed(parsed, armored){
   try {
     const fp = parsed.getFingerprint();
     if (keys.some(k => k.fingerprint === fp)) {
-      $('impErr').textContent = '该密钥已存在，无需重复导入。';
+      $('impErr').textContent = '密钥已存在';
       $('impErr').classList.add('visible');
       $('btnConfirmImport').disabled = true;
       return;
@@ -758,7 +954,13 @@ async function openDetail(fp){
           '</button>' +
         '</div>' +
         '<div id="detExpiryEdit" class="det-edit hidden">' +
-          '<input type="date" id="detExpiryInput" value="' + (never ? '' : fmtDate(exp)) + '"' + (never ? ' disabled' : '') + '>' +
+          '<div class="date-field" data-date-field>' +
+            '<input type="hidden" id="detExpiryInput" value="' + (never ? '' : fmtDate(exp)) + '"' + (never ? ' disabled' : '') + '>' +
+            '<button type="button" class="date-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="到期日期">' +
+              '<span class="date-value">选择日期</span>' +
+              '<svg class="date-icon"><use href="#i-calendar"/></svg>' +
+            '</button>' +
+          '</div>' +
           '<label class="check-inline"><input type="checkbox" id="detNeverExpire"' + (never ? ' checked' : '') + '>永不过期</label>' +
           '<button class="btn btn-mini" id="btnSaveExpiry">保存</button>' +
           '<button class="btn btn-mini btn-ghost" id="btnCancelExpiry">取消</button>' +
@@ -801,6 +1003,8 @@ async function openDetail(fp){
         '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
       '</div>';
 
+    initDateFields($('detContent'));
+
     $('detContent').querySelectorAll('[data-copy]').forEach(b => {
       b.addEventListener('click', () => copyText(b.dataset.copy));
     });
@@ -823,7 +1027,10 @@ async function openDetail(fp){
 
     $('btnEditExpiry').addEventListener('click', () => $('detExpiryEdit').classList.toggle('hidden'));
     $('btnCancelExpiry').addEventListener('click', () => $('detExpiryEdit').classList.add('hidden'));
-    $('detNeverExpire').addEventListener('change', () => { $('detExpiryInput').disabled = $('detNeverExpire').checked; });
+    $('detNeverExpire').addEventListener('change', () => {
+      $('detExpiryInput').disabled = $('detNeverExpire').checked;
+      syncDateField('detExpiryInput');
+    });
     $('btnSaveExpiry').addEventListener('click', async () => {
       const never = $('detNeverExpire').checked;
       let date = null;
@@ -831,19 +1038,19 @@ async function openDetail(fp){
         const v = $('detExpiryInput').value;
         if (!v) { toast('请选择日期'); return; }
         date = new Date(v + 'T23:59:59');
-        if (date <= new Date()) { toast('到期日期不能早于当前时间'); return; }
+        if (date <= new Date()) { toast('日期不能早于现在'); return; }
       }
       try {
         await changeExpiry(rec, date);
         closeModal('modalDetail');
         toast('到期日期已更新');
         renderKeys();
-      } catch (e) {
-        toast('更新失败：' + friendlyError(e && e.message));
+      } catch {
+        toast('更新失败');
       }
     });
-  } catch (e) {
-    $('detContent').innerHTML = '<div class="muted">加载失败：' + esc(e && e.message) + '</div>';
+  } catch {
+    $('detContent').innerHTML = '<div class="muted">加载失败</div>';
   }
 }
 
@@ -869,6 +1076,73 @@ async function changeExpiry(rec, newExpiryDate){
 
 /* ══════════ 记事本操作 ══════════ */
 
+let npFile = null;
+let npResult = null;
+
+function fmtSize(n){
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function updateResultButton(){
+  const btn = $('btnCopyOutput');
+  if (!btn) return;
+  btn.textContent = npFile ? '下载' : '复制';
+  btn.disabled = !!npFile && !npResult;
+}
+
+function beginNpOp(){
+  if (npFile) { npResult = null; updateResultButton(); }
+}
+
+function clearNpFile(clearText){
+  npFile = null;
+  npResult = null;
+  $('npFileInfo').classList.add('hidden');
+  $('npFileName').textContent = '';
+  $('npInput').placeholder = '输入要加密或解密的信息';
+  if (clearText) $('npInput').value = '';
+  updateResultButton();
+}
+
+function npArmoredInput(){
+  if (!npFile) return $('npInput').value.trim();
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(npFile.bytes).trim(); }
+  catch { return null; }
+}
+
+function downloadResult(){
+  if (!npResult) return;
+  const data = npResult.data;
+  const blob = data instanceof Uint8Array
+    ? new Blob([data], { type: 'application/octet-stream' })
+    : new Blob([data], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = npResult.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function setNpFile(file){
+  if (!file) return;
+  let bytes;
+  try { bytes = new Uint8Array(await file.arrayBuffer()); }
+  catch { toast('读取失败'); return; }
+  npFile = { name: file.name, bytes: bytes };
+  npResult = null;
+  $('npFileName').textContent = file.name + ' · ' + fmtSize(bytes.length);
+  $('npFileInfo').classList.remove('hidden');
+  $('npInput').value = '';
+  $('npInput').placeholder = '已载入文件：' + file.name;
+  $('npOutput').value = '';
+  $('npStatus').textContent = '';
+  $('npStatus').classList.add('hidden');
+  updateResultButton();
+}
+
 function findKeyNameByKeyID(kid){
   for (const rec of keys) {
     if (rec.keyID === kid) return userIDLabel(rec);
@@ -876,7 +1150,7 @@ function findKeyNameByKeyID(kid){
   return null;
 }
 
-function showResult(text, statusMsg, cls){
+function setStatus(statusMsg, cls){
   const status = $('npStatus');
   if (statusMsg) {
     status.textContent = statusMsg;
@@ -886,7 +1160,18 @@ function showResult(text, statusMsg, cls){
   } else {
     status.classList.add('hidden');
   }
+}
+
+function showResult(text, statusMsg, cls){
+  setStatus(statusMsg, cls);
   $('npOutput').value = text;
+}
+
+function showFileResult(name, data, statusMsg, cls){
+  setStatus(statusMsg, cls);
+  npResult = { name: name, data: data };
+  $('npOutput').value = '';
+  updateResultButton();
 }
 function showOpError(msg){
   const status = $('npStatus');
@@ -930,6 +1215,7 @@ async function getSigningPrivate(){
 
 async function doEncrypt(){
   const text = $('npInput').value;
+  beginNpOp();
 
   const signFp = $('npSign').value;
   const password = $('npPassword').value;
@@ -937,10 +1223,10 @@ async function doEncrypt(){
   const otherFp = $('npForOther').value;
   const otherPaste = $('npOtherKey').value.trim();
   const hasTarget = !!(meFp || (otherFp && otherFp !== '__paste') || otherPaste || password);
-  if (!hasTarget && !signFp) { showOpError('请至少选择一项：签名为 / 为我加密 / 为他人加密 / 使用密码加密。'); return; }
+  if (!hasTarget && !signFp) { showOpError('请选择加密方式'); return; }
 
   try {
-    const message = await openpgp.createMessage({ text });
+    const message = await openpgp.createMessage(npFile ? { binary: npFile.bytes } : { text });
     const encryptionKeys = await collectEncryptionKeys();
     const passwords = password ? [password] : [];
 
@@ -948,9 +1234,16 @@ async function doEncrypt(){
     if (signFp) signingKeys.push(await getDecryptedPrivate(signFp));
 
     if (encryptionKeys.length === 0 && passwords.length === 0) {
-      const cleartext = await openpgp.createCleartextMessage({ text });
-      const signed = await openpgp.sign({ message: cleartext, signingKeys });
-      showResult(signed, '签名成功（仅签名，未加密）。', 'info');
+      let signed;
+      if (npFile) {
+        const msg = await openpgp.createMessage({ binary: npFile.bytes });
+        signed = await openpgp.sign({ message: msg, signingKeys, format: 'armored' });
+      } else {
+        const cleartext = await openpgp.createCleartextMessage({ text });
+        signed = await openpgp.sign({ message: cleartext, signingKeys });
+      }
+      if (npFile) showFileResult(npFile.name + '.asc', signed, '签名成功（仅签名，未加密）。', 'info');
+      else showResult(signed, '签名成功（仅签名，未加密）。', 'info');
       return;
     }
 
@@ -962,24 +1255,34 @@ async function doEncrypt(){
     if (encryptionKeys.length) via.push('密钥');
     if (passwords.length) via.push('密码');
     const signedMsg = signingKeys.length ? '，并已签名' : '';
-    showResult(armored, '加密成功（使用' + via.join('+') + '）' + signedMsg + '。');
-  } catch (e) {
-    showOpError('加密失败：' + friendlyError(e && e.message));
+    const note = '加密成功（使用' + via.join('+') + '）' + signedMsg + '。';
+    if (npFile) showFileResult(npFile.name + '.asc', armored, note);
+    else showResult(armored, note);
+  } catch {
+    showOpError('加密失败');
   }
 }
 
 async function doSign(){
   const text = $('npInput').value;
-  if (!text.trim()) { showOpError('请输入要签名的信息。'); return; }
+  beginNpOp();
+  if (!text.trim() && !npFile) { showOpError('请输入内容'); return; }
   const fp = $('npSign').value;
-  if (!fp) { showOpError('请先选择「签名为」的密钥。'); return; }
+  if (!fp) { showOpError('请选择签名密钥'); return; }
   try {
     const priv = await getDecryptedPrivate(fp);
-    const cleartext = await openpgp.createCleartextMessage({ text });
-    const signed = await openpgp.sign({ message: cleartext, signingKeys: [priv] });
-    showResult(signed, '签名成功。');
-  } catch (e) {
-    showOpError('签名失败：' + friendlyError(e && e.message));
+    let signed;
+    if (npFile) {
+      const msg = await openpgp.createMessage({ binary: npFile.bytes });
+      signed = await openpgp.sign({ message: msg, signingKeys: [priv], format: 'armored' });
+    } else {
+      const cleartext = await openpgp.createCleartextMessage({ text });
+      signed = await openpgp.sign({ message: cleartext, signingKeys: [priv] });
+    }
+    if (npFile) showFileResult(npFile.name + '.asc', signed, '签名成功。');
+    else showResult(signed, '签名成功。');
+  } catch {
+    showOpError('签名失败');
   }
 }
 
@@ -991,16 +1294,18 @@ async function describeSignatures(signatures){
     try {
       await sig.verified;
       parts.push('签名验证成功：' + (owner || kid));
-    } catch (e) {
-      parts.push('签名验证失败：' + (owner || kid) + '（' + (e && e.message || '签名无效') + '）');
+    } catch {
+      parts.push('签名验证失败：' + (owner || kid));
     }
   }
   return parts;
 }
 
 async function doDecrypt(){
-  const armored = $('npInput').value.trim();
-  if (!armored) { showOpError('请输入要解密的信息。'); return; }
+  beginNpOp();
+  const armored = npArmoredInput();
+  if (armored === null) { showOpError('密文格式错误'); return; }
+  if (!armored) { showOpError('请输入内容'); return; }
 
   let msg;
   try {
@@ -1008,9 +1313,9 @@ async function doDecrypt(){
   } catch {
     try {
       await openpgp.readCleartextMessage({ cleartextMessage: armored });
-      showOpError('这是清文本签名消息（未加密）。请使用「验证」按钮。');
+      showOpError('请使用验证功能');
     } catch {
-      showOpError('无法解析输入内容：不是有效的 PGP 密文。');
+      showOpError('密文格式错误');
     }
     return;
   }
@@ -1032,12 +1337,12 @@ async function doDecrypt(){
       if (matched) {
         decryptionKeys.push(await getDecryptedPrivate(matched.fingerprint));
       } else if (!passwords.length) {
-        showOpError('没有找到能解密此消息的私钥。若消息使用密码加密，请先在上方输入密码。');
+        showOpError('找不到解密私钥');
         return;
       }
     }
     if (!targetKeyIDs.length && !passwords.length) {
-      showOpError('无法确定消息的解密对象（未指定收件人密钥 ID）。若消息使用密码加密，请先在上方输入密码。');
+      showOpError('无法确定解密对象');
       return;
     }
 
@@ -1050,7 +1355,7 @@ async function doDecrypt(){
       message: msg,
       decryptionKeys: decryptionKeys,
       verificationKeys: verificationKeys,
-      format: 'utf8',
+      format: 'binary',
     };
     if (passwords.length) decryptOpts.passwords = passwords;
     const { data, signatures } = await openpgp.decrypt(decryptOpts);
@@ -1060,16 +1365,30 @@ async function doDecrypt(){
     if (sigParts.length) note += '。' + sigParts.join('；');
     else if (passwords.length) note += '（使用密码解密，该消息未签名）。';
     else note += '。该消息未签名。';
-    showResult(String(data), note);
-  } catch (e) {
-    showOpError('解密失败：' + friendlyError(e && e.message));
+    let isText = true;
+    let out = '';
+    try { out = new TextDecoder('utf-8', { fatal: true }).decode(data); } catch { isText = false; }
+    if (npFile) {
+      let name = npFile.name.replace(/\.(asc|pgp|gpg)$/i, '');
+      if (!/\.[^.]+$/.test(name)) name += isText ? '.txt' : '.bin';
+      showFileResult(name, isText ? out : data, note);
+    } else if (isText) {
+      showResult(out, note);
+    } else {
+      setStatus(note + '（二进制数据）');
+      $('npOutput').value = '';
+    }
+  } catch {
+    showOpError('解密失败');
   }
 }
 
 async function doVerify(){
-  const armored = $('npInput').value.trim();
-  if (!armored) { showOpError('请输入要验证的消息。'); return; }
-  if (!keys.length) { showOpError('请先创建或导入密钥，用于验证签名。'); return; }
+  beginNpOp();
+  const armored = npArmoredInput();
+  if (armored === null) { showOpError('签名格式错误'); return; }
+  if (!armored) { showOpError('请输入内容'); return; }
+  if (!keys.length) { showOpError('请先添加密钥'); return; }
 
   const verificationKeys = [];
   for (const rec of keys) {
@@ -1083,32 +1402,38 @@ async function doVerify(){
       const cl = await openpgp.readCleartextMessage({ cleartextMessage: armored });
       res = await openpgp.verify({ message: cl, verificationKeys });
       text = res.data;
-    } catch (e1) {
+    } catch {
       let msg;
       try {
         msg = await openpgp.readMessage({ armoredMessage: armored });
       } catch {
-        showOpError('无法解析输入内容：不是有效的 PGP 签名消息。');
+        showOpError('签名格式错误');
         return;
       }
       try {
         res = await openpgp.verify({ message: msg, verificationKeys });
         text = res.data;
-      } catch (e2) {
+      } catch {
         const targets = msg.getEncryptionKeyIDs();
         if (targets && targets.length) {
-          showOpError('这是加密消息，请使用「解密」按钮。');
+          showOpError('请使用解密功能');
         } else {
-          showOpError('该消息没有可验证的签名。');
+          showOpError('没有可验证签名');
         }
         return;
       }
     }
     const sigParts = await describeSignatures(res.signatures);
-    if (!sigParts.length) { showOpError('该消息没有签名。'); return; }
-    showResult(String(text), sigParts.join('；'));
-  } catch (e) {
-    showOpError('验证失败：' + friendlyError(e && e.message));
+    if (!sigParts.length) { showOpError('没有签名'); return; }
+    let out = text;
+    if (out instanceof Uint8Array) {
+      try { out = new TextDecoder('utf-8', { fatal: true }).decode(out); }
+      catch { out = '（二进制数据）'; }
+    }
+    if (npFile) showFileResult(npFile.name + '-verified.txt', sigParts.join('\n'), sigParts.join('；'));
+    else showResult(String(out), sigParts.join('；'));
+  } catch {
+    showOpError('验证失败');
   }
 }
 
@@ -1126,7 +1451,7 @@ function pwRemoveChars(str, chars) {
   const set = new Set(chars);
   return str.split('').filter(c => !set.has(c)).join('');
 }
-// 密码学安全随机数（crypto.getRandomValues），拒绝采样消除取模偏差；极端环境回退 Math.random
+// 安全随机数，拒绝采样消除取模偏差
 function pwRand(n) {
   const buf = new Uint32Array(1);
   if (window.crypto && crypto.getRandomValues) {
@@ -1176,18 +1501,15 @@ function pwGetCombinedPool(pools) {
 }
 
 function pwValidate(length, pools) {
-  if (pools.length === 0) return '请至少选择一种字符类型。';
+  if (pools.length === 0) return '请选择字符类型';
   const totalMin = pools.reduce((s, p) => s + p.min, 0);
-  if (totalMin > length) return `各类型最少字符数之和 (${totalMin}) 超过了密码长度 (${length})，请减少最少个数或增加密码长度。`;
-  const names = { upper: '大写字母', lower: '小写字母', digit: '数字', special: '特殊符号' };
+  if (totalMin > length) return '最少字符数超过长度';
   for (const p of pools) {
-    if (p.min > p.chars.length)
-      return `"${names[p.key] || p.key}" 排除易混淆字符后可用字符不足 ${p.min} 个（仅剩 ${p.chars.length} 个），请减少该类型的最少个数。`;
+    if (p.min > p.chars.length) return '可用字符不足';
   }
   if ($('optDuplicate').checked) {
     const combined = pwGetCombinedPool(pools);
-    if (combined.length < length)
-      return `"无重复字符" 模式下，可用字符集仅 ${combined.length} 个唯一字符，无法生成 ${length} 位无重复密码。请增加字符类型或减少密码长度。`;
+    if (combined.length < length) return '唯一字符不足';
   }
   return null;
 }
@@ -1200,6 +1522,7 @@ function pwGenerate() {
     $('errorMsg').textContent = err;
     $('errorMsg').classList.add('visible');
     $('passwordSection').classList.add('hidden');
+    $('btnCopy').disabled = true;
     return;
   }
   $('errorMsg').classList.remove('visible');
@@ -1239,15 +1562,16 @@ function pwCalcStrength(password, pools) {
   else if (entropy < 50) level = 'medium';
   else if (entropy < 70) level = 'strong';
   else level = 'extreme';
-  return { entropy, level, poolSize };
+  return { entropy, level };
 }
 
 function pwShowResult(password, length, pools) {
   $('passwordText').textContent = password;
   $('passwordSection').classList.remove('hidden');
+  $('btnCopy').disabled = false;
   // 结果从「生成密码」那个按钮底下长出来；首屏那一发没有可见的因，不作动效
   if (!suppressReveal) replay($('passwordSection'), 'reveal');
-  const { entropy, level, poolSize } = pwCalcStrength(password, pools);
+  const { entropy, level } = pwCalcStrength(password, pools);
   const segments = $('strengthBar').querySelectorAll('.segment');
   const levels = ['weak', 'medium', 'strong', 'extreme'];
   const levelIdx = levels.indexOf(level);
@@ -1257,7 +1581,6 @@ function pwShowResult(password, length, pools) {
   });
   const labels = { weak: '弱', medium: '中', strong: '强', extreme: '非常强' };
   $('strengthText').textContent = `密码强度：${labels[level]}`;
-  $('strengthBits').textContent = `字符池 ${poolSize} · 熵 ${entropy.toFixed(1)} bit`;
 }
 
 function pwSyncMinState() {
@@ -1273,16 +1596,13 @@ function wirePasswordEvents() {
     const text = $('passwordText').textContent;
     if (!text) return;
     copyText(text);
-    const tip = $('copyTooltip');
     const use = this.querySelector('use');
     const svg = this.querySelector('svg');
-    tip.classList.add('show');
-    // 状态翻转：复制图标弹成勾选（onetake press 的 state flip），到点再弹回来
+    // 图标翻成勾选，1.8s 后翻回
     clearTimeout(copyIconTimer);
     use.setAttribute('href', '#i-check');
     replay(svg, 'pop');
     copyIconTimer = setTimeout(() => {
-      tip.classList.remove('show');
       use.setAttribute('href', '#i-copy');
       replay(svg, 'pop');
     }, 1800);
@@ -1325,7 +1645,10 @@ function wireEvents(){
   $('btnImportFirst').addEventListener('click', openImport);
 
   // 创建表单
-  $('cNeverExpire').addEventListener('change', () => { $('cExpiry').disabled = $('cNeverExpire').checked; });
+  $('cNeverExpire').addEventListener('change', () => {
+    $('cExpiry').disabled = $('cNeverExpire').checked;
+    syncDateField('cExpiry');
+  });
   $('fmtSelect').addEventListener('change', syncAlgoAvailability);
   $('btnSubmitCreate').addEventListener('click', submitCreate);
   ['cName', 'cEmail'].forEach(id => {
@@ -1356,7 +1679,7 @@ function wireEvents(){
       const parsed = await openpgp.readKey({ armoredKey: text });
       await previewParsed(parsed, text);
     } catch {
-      pendingImport = null; // 清掉文件标签页遗留的待导入状态，避免预览与按钮状态不一致
+      pendingImport = null; // 重置待导入状态
       $('impPreview').classList.add('hidden');
       $('btnConfirmImport').disabled = true;
     }
@@ -1388,10 +1711,11 @@ function wireEvents(){
   $('btnDecrypt').addEventListener('click', doDecrypt);
   $('btnVerify').addEventListener('click', doVerify);
   $('btnCopyOutput').addEventListener('click', () => {
+    if (npFile) { downloadResult(); return; }
     if ($('npOutput').value) copyText($('npOutput').value);
   });
   $('btnClearOutput').addEventListener('click', () => {
-    $('npInput').value = '';
+    clearNpFile(true);
     $('npOutput').value = '';
     $('npStatus').textContent = '';
     $('npStatus').classList.add('hidden');
@@ -1401,8 +1725,16 @@ function wireEvents(){
     $('npPassword').value = '';
   });
 
-  // 密码框显示切换（眼睛图标）
-  // 阻止 mousedown 抢焦点：点击眼睛后焦点留在输入框，Enter 不被吞
+  $('btnUploadFile').addEventListener('click', () => $('npFileInput').click());
+  $('npFileInput').addEventListener('change', function () {
+    const f = this.files && this.files[0];
+    this.value = '';
+    if (f) setNpFile(f);
+  });
+  $('btnClearFile').addEventListener('click', () => clearNpFile(true));
+  $('npInput').addEventListener('input', () => { if (npFile) clearNpFile(false); });
+
+  // 眼睛按钮：阻止 mousedown 抢焦点，避免 Enter 被吞
   document.addEventListener('mousedown', e => {
     const btn = e.target.closest('.pw-toggle');
     if (btn) e.preventDefault();
@@ -1439,16 +1771,13 @@ function init(){
     const h = m.querySelector('.modal-header h2');
     if (h) m.setAttribute('aria-label', h.textContent);
   });
-  // 清理旧版「密码库」遗留数据（该功能已移除）
-  try {
-    localStorage.removeItem('openpgp_pwlib_v1');
-    localStorage.removeItem('pwlib_icon_cache_v1');
-  } catch {}
   loadKeys();
   buildAlgoSelect();
   const d = new Date();
   d.setFullYear(d.getFullYear() + 3);
   $('cExpiry').value = fmtDate(d);
+  initDatePicker();
+  initDateFields();
   wireEvents();
   renderKeys();
   wirePasswordEvents();
